@@ -2,6 +2,8 @@
 
 A modern, comprehensive Islamic utility application built with React, TypeScript, and Tailwind CSS. Provides accurate prayer times, Al-Quran reading features, and a Hijri calendar in a beautiful, responsive interface.
 
+[**🚀 Live Demo**](https://muslim-web-dun.vercel.app/)
+
 ## ✨ Features
 
 ### 🕌 Prayer Times & Schedule
