@@ -112,26 +112,59 @@ export const api = {
         }
     },
 
-    // Get prayer times for a city and date
-    getPrayerTimes: async (cityId: string, date: Date): Promise<PrayerTimes | null> => {
-        try {
-            // Date format: YYYY-MM-DD for v2 usually or YYYY/MM/DD
-            // v2 endpoint: /sholat/jadwal/{idKota}/{yyyy-mm-dd}
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            const formattedDate = `${year}-${month}-${day}`;
-
-            const response = await axios.get(`https://api.myquran.com/v2/sholat/jadwal/${cityId}/${formattedDate}`);
-
-            if (response.data.status) {
-                return response.data.data;
+    // Helper to fetch with LocalStorage Cache
+    fetchWithCache: async <T>(key: string, fetcher: () => Promise<T>, forceRefresh = false, ttlMinutes = 60 * 24): Promise<T | null> => {
+        if (!forceRefresh) {
+            const cached = localStorage.getItem(key);
+            if (cached) {
+                try {
+                    const parsed = JSON.parse(cached);
+                    const now = new Date().getTime();
+                    // Check if expired
+                    if (now - parsed.timestamp < ttlMinutes * 60 * 1000) {
+                        return parsed.data;
+                    }
+                } catch (e) {
+                    console.error("Cache parse error", e);
+                }
             }
-            return null;
+        }
+
+        try {
+            const data = await fetcher();
+            if (data) {
+                localStorage.setItem(key, JSON.stringify({
+                    timestamp: new Date().getTime(),
+                    data: data
+                }));
+            }
+            return data;
         } catch (error) {
-            console.error('Error fetching prayer times:', error);
+            console.error("Fetch error", error);
             return null;
         }
+    },
+
+    // Get prayer times for a city and date
+    getPrayerTimes: async (cityId: string, date: Date, forceRefresh = false): Promise<PrayerTimes | null> => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const formattedDate = `${year}-${month}-${day}`;
+        const cacheKey = `muslim_app_prayer_${cityId}_${formattedDate}`;
+
+        return api.fetchWithCache(cacheKey, async () => {
+            try {
+                const response = await axios.get(`https://api.myquran.com/v2/sholat/jadwal/${cityId}/${formattedDate}`);
+                if (response.data.status) {
+                    return response.data.data;
+                }
+                return null;
+            } catch (error) {
+                console.error('Error fetching prayer times:', error);
+                return null;
+            }
+        }, forceRefresh);
     },
 
     // Get Hijri Date from Masehi
@@ -236,14 +269,25 @@ export const api = {
                 }
             }
 
-            // 2. Get Verses
-            // Note: Range endpoint might differ for some surahs or fallback needed
-            const versesResponse = await axios.get(`https://api.myquran.com/v2/quran/ayat/${id}/1-${verseCount}`);
+            // 2. Get Verses (Batched Strategy to bypass API limits)
+            const BATCH_SIZE = 20;
+            const batchPromises = [];
 
-            let verses: Verse[] = [];
-            if (versesResponse.data.status) {
-                verses = versesResponse.data.data;
+            for (let i = 1; i <= verseCount; i += BATCH_SIZE) {
+                const start = i;
+                const end = Math.min(i + BATCH_SIZE - 1, verseCount);
+                batchPromises.push(
+                    axios.get(`https://api.myquran.com/v2/quran/ayat/${id}/${start}-${end}`)
+                        .then(res => res.data.status ? res.data.data : [])
+                        .catch(err => {
+                            console.error(`Error fetching batch ${start}-${end}:`, err);
+                            return [];
+                        })
+                );
             }
+
+            const batchResults = await Promise.all(batchPromises);
+            const verses: Verse[] = batchResults.flat();
 
             return {
                 ...surahInfo,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api, City, PrayerTimes } from '../services/api';
-import { Search, MapPin, Loader2, Calendar as CalendarIcon, Navigation, ChevronDown, Sunrise, Sun, Sunset, Moon, CloudSun, CloudMoon, Coffee } from 'lucide-react';
+import { Search, MapPin, Loader2, Calendar as CalendarIcon, Navigation, ChevronDown, Sunrise, Sun, Sunset, Moon, CloudSun, CloudMoon, Coffee, Volume2, RotateCw } from 'lucide-react';
 import { format, isSameDay, startOfWeek, endOfWeek, isWithinInterval, parse } from 'date-fns';
 import { id } from 'date-fns/locale';
 
@@ -39,9 +39,28 @@ const PrayerTimesPage: React.FC = () => {
     const [countdown, setCountdown] = useState<string>('');
     const [hijriDate, setHijriDate] = useState<HijriDateInfo | null>(null);
     const [notifiedPrayer, setNotifiedPrayer] = useState<string | null>(null);
+    const [showAdzanModal, setShowAdzanModal] = useState(false);
 
     // Adzan Audio Source (Using a reliable external source or placeholder)
-    const adzanAudio = new Audio('https://media.sd.ma/assorted/adhans/makkah.mp3');
+    const adzanAudioRef = React.useRef<HTMLAudioElement | null>(null);
+
+    const handleStopAdzan = () => {
+        if (adzanAudioRef.current) {
+            adzanAudioRef.current.pause();
+            adzanAudioRef.current.currentTime = 0;
+        }
+        setShowAdzanModal(false);
+    };
+
+    useEffect(() => {
+        adzanAudioRef.current = new Audio('https://www.islamcan.com/audio/adhan/azan1.mp3');
+        return () => {
+            if (adzanAudioRef.current) {
+                adzanAudioRef.current.pause();
+                adzanAudioRef.current = null;
+            }
+        };
+    }, []);
 
     useEffect(() => {
         // Request Notification Permission
@@ -89,16 +108,24 @@ const PrayerTimesPage: React.FC = () => {
                 // Trigger Notification & Audio
                 if (foundActive && foundActive !== notifiedPrayer) {
                     setNotifiedPrayer(foundActive);
+                    setShowAdzanModal(true);
 
-                    if ('Notification' in window && Notification.permission === 'granted') {
-                        new Notification(`Waktu ${foundActive} Telah Tiba!`, {
-                            body: `Saatnya menunaikan sholat ${foundActive} untuk wilayah ${city?.lokasi || 'Anda'}.`,
-                            icon: '/pwa-192x192.png' // Ensure this exists or use default
-                        });
+                    try {
+                        if ('Notification' in window && Notification.permission === 'granted') {
+                            new Notification(`Waktu ${foundActive} Telah Tiba!`, {
+                                body: `Saatnya menunaikan sholat ${foundActive} untuk wilayah ${city?.lokasi || 'Anda'}.`,
+                                icon: '/pwa-192x192.png' // Ensure this exists or use default
+                            });
+                        }
+                    } catch (error) {
+                        console.error("Notification failed:", error);
                     }
 
                     // Play Adzan
-                    adzanAudio.play().catch(e => console.log("Audio play failed (user interaction needed first):", e));
+                    if (adzanAudioRef.current) {
+                        adzanAudioRef.current.currentTime = 0;
+                        adzanAudioRef.current.play().catch(e => console.log("Audio play failed (user interaction needed first):", e));
+                    }
                 } else if (!foundActive) {
                     setNotifiedPrayer(null); // Reset when prayer time is over
                 }
@@ -175,11 +202,12 @@ const PrayerTimesPage: React.FC = () => {
         }
     };
 
-    const loadData = async (cityId: string) => {
+    const loadData = async (cityId: string, forceRefresh = false) => {
         setLoading(true);
         try {
             const today = new Date();
-            const dailyData = await api.getPrayerTimes(cityId, today);
+            // Use new API method with cache support
+            const dailyData = await api.getPrayerTimes(cityId, today, forceRefresh);
             setSchedule(dailyData);
 
             const hijri = await api.getHijriDate(today);
@@ -199,6 +227,12 @@ const PrayerTimesPage: React.FC = () => {
             console.error('Data load error', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleManualRefresh = () => {
+        if (city) {
+            loadData(city.id, true);
         }
     };
 
@@ -268,22 +302,22 @@ const PrayerTimesPage: React.FC = () => {
                     <input
                         type="text"
                         placeholder="Cari kota..."
-                        className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
+                        className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm text-slate-800 dark:text-white placeholder-slate-400 transition-colors"
                         value={searchQuery}
                         onChange={handleSearch}
                         onFocus={() => setShowDropdown(true)}
                         onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
                     />
                     {showDropdown && searchResults.length > 0 && (
-                        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-slate-100 max-h-60 overflow-y-auto">
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 max-h-60 overflow-y-auto">
                             {searchResults.map((city) => (
                                 <button
                                     key={city.id}
-                                    className="w-full px-4 py-3 text-left hover:bg-emerald-50 transition-colors flex items-center gap-2 border-b border-slate-50 last:border-0"
+                                    className="w-full px-4 py-3 text-left hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors flex items-center gap-2 border-b border-slate-50 dark:border-slate-700 last:border-0"
                                     onClick={() => selectCity(city)}
                                 >
                                     <MapPin size={16} className="text-emerald-500" />
-                                    <span className="text-slate-700 text-sm">{city.lokasi}</span>
+                                    <span className="text-slate-700 dark:text-slate-200 text-sm">{city.lokasi}</span>
                                 </button>
                             ))}
                         </div>
@@ -292,9 +326,17 @@ const PrayerTimesPage: React.FC = () => {
                 <button
                     onClick={handleGeolocation}
                     disabled={locating}
-                    className="bg-emerald-100 text-emerald-700 p-3 rounded-2xl hover:bg-emerald-200 transition-colors disabled:opacity-50"
+                    className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 p-3 rounded-2xl hover:bg-emerald-200 dark:hover:bg-emerald-900/60 transition-colors disabled:opacity-50"
                 >
                     {locating ? <Loader2 className="animate-spin" size={20} /> : <Navigation size={20} />}
+                </button>
+                <button
+                    onClick={handleManualRefresh}
+                    disabled={loading}
+                    className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 p-3 rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
+                    title="Muat Ulang Data"
+                >
+                    <RotateCw size={20} className={loading ? 'animate-spin' : ''} />
                 </button>
             </div>
 
@@ -374,8 +416,8 @@ const PrayerTimesPage: React.FC = () => {
                     </div>
 
                     {/* Daily Schedule List with Icons */}
-                    <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100">
-                        <h3 className="text-slate-800 font-bold mb-4 px-2 flex items-center gap-2">
+                    <div className="bg-white dark:bg-slate-800 rounded-3xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 transition-colors">
+                        <h3 className="text-slate-800 dark:text-white font-bold mb-4 px-2 flex items-center gap-2">
                             <CalendarIcon size={18} className="text-emerald-500" />
                             Jadwal Hari Ini
                         </h3>
@@ -392,32 +434,32 @@ const PrayerTimesPage: React.FC = () => {
                     </div>
 
                     {/* Combined Schedule Card */}
-                    <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100">
-                        <div className="p-5 border-b border-slate-50">
-                            <h2 className="text-lg font-bold text-slate-800">
-                                Prayer times in <span className="text-emerald-600">{city?.lokasi}</span>
+                    <div className="bg-white dark:bg-slate-800 rounded-3xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-700 transition-colors">
+                        <div className="p-5 border-b border-slate-50 dark:border-slate-700">
+                            <h2 className="text-lg font-bold text-slate-800 dark:text-white">
+                                Prayer times in <span className="text-emerald-600 dark:text-emerald-400">{city?.lokasi}</span>
                             </h2>
-                            <p className="text-slate-400 text-xs mt-1">Jadwal sholat terpercaya sesuai Kemenag RI</p>
+                            <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">Jadwal sholat terpercaya sesuai Kemenag RI</p>
                         </div>
 
-                        <div className="flex border-b border-slate-100">
+                        <div className="flex border-b border-slate-100 dark:border-slate-700">
                             <button
                                 onClick={() => setActiveTab('week')}
-                                className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'week' ? 'text-emerald-600 border-b-2 border-emerald-500 bg-emerald-50/50' : 'text-slate-500 hover:text-slate-700'}`}
+                                className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'week' ? 'text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/20' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'}`}
                             >
                                 This Week
                             </button>
                             <button
                                 onClick={() => setActiveTab('month')}
-                                className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'month' ? 'text-emerald-600 border-b-2 border-emerald-500 bg-emerald-50/50' : 'text-slate-500 hover:text-slate-700'}`}
+                                className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'month' ? 'text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/20' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'}`}
                             >
                                 This Month
                             </button>
                         </div>
 
                         <div className="overflow-x-auto p-0 animate-in fade-in duration-300">
-                            <table className="w-full text-sm text-left">
-                                <thead className="text-xs text-slate-500 uppercase bg-slate-50">
+                            <table className="w-full text-sm text-left text-slate-600 dark:text-slate-300">
+                                <thead className="text-xs text-slate-500 dark:text-slate-400 uppercase bg-slate-50 dark:bg-slate-700/50">
                                     <tr>
                                         <th className="px-4 py-3 min-w-[80px]">Tgl</th>
                                         <th className="px-2 py-3">Subuh</th>
@@ -433,16 +475,16 @@ const PrayerTimesPage: React.FC = () => {
                                         const isToday = isSameDay(dayDate, new Date());
 
                                         return (
-                                            <tr key={idx} className={`border-b border-slate-100 last:border-0 transition-colors ${isToday ? 'bg-emerald-50' : 'hover:bg-slate-50'}`}>
-                                                <td className="px-4 py-3 font-medium text-slate-900 whitespace-nowrap">
+                                            <tr key={idx} className={`border-b border-slate-100 dark:border-slate-700 last:border-0 transition-colors ${isToday ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}>
+                                                <td className="px-4 py-3 font-medium text-slate-900 dark:text-white whitespace-nowrap">
                                                     {formatMonthlyDate(day.tanggal)}
                                                     {isToday && <span className="ml-1 inline-block w-2 h-2 rounded-full bg-emerald-500"></span>}
                                                 </td>
-                                                <td className="px-2 py-3 text-slate-600">{day.subuh}</td>
-                                                <td className="px-2 py-3 text-slate-600">{day.dzuhur}</td>
-                                                <td className="px-2 py-3 text-slate-600">{day.ashar}</td>
-                                                <td className="px-2 py-3 text-slate-600">{day.maghrib}</td>
-                                                <td className="px-2 py-3 pr-4 text-slate-600">{day.isya}</td>
+                                                <td className="px-2 py-3">{day.subuh}</td>
+                                                <td className="px-2 py-3">{day.dzuhur}</td>
+                                                <td className="px-2 py-3">{day.ashar}</td>
+                                                <td className="px-2 py-3">{day.maghrib}</td>
+                                                <td className="px-2 py-3 pr-4">{day.isya}</td>
                                             </tr>
                                         );
                                     })}
@@ -461,6 +503,32 @@ const PrayerTimesPage: React.FC = () => {
                     <p className="text-slate-500 mb-6">
                         Kami tidak dapat mendeteksi lokasi Anda. Silakan cari kota Anda secara manual.
                     </p>
+                </div>
+            )}
+
+            {/* Adzan Alert Modal */}
+            {showAdzanModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 w-full max-w-sm shadow-2xl text-center relative border border-white/20 dark:border-slate-800">
+                        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-emerald-500 rounded-full p-4 shadow-lg shadow-emerald-500/30 animate-pulse">
+                            <Volume2 size={32} className="text-white" />
+                        </div>
+
+                        <div className="mt-6">
+                            <h3 className="text-emerald-600 dark:text-emerald-400 font-bold text-lg uppercase tracking-widest mb-1">Waktu Sholat Telah Tiba</h3>
+                            <h2 className="text-4xl font-black text-slate-800 dark:text-white mb-2">{notifiedPrayer}</h2>
+                            <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
+                                Saatnya menunaikan ibadah sholat untuk wilayah <span className="font-semibold text-slate-700 dark:text-slate-200">{city?.lokasi}</span> dan sekitarnya.
+                            </p>
+
+                            <button
+                                onClick={handleStopAdzan}
+                                className="w-full bg-slate-900 dark:bg-slate-700 text-white font-bold py-3.5 rounded-2xl shadow-lg hover:bg-slate-800 dark:hover:bg-slate-600 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                            >
+                                <span>Matikan Suara</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
@@ -498,16 +566,16 @@ const getNextPrayer = (schedule: any) => {
 
 const PrayerItem = ({ name, time, icon, active = false, isSecondary = false }: { name: string; time: string; icon: React.ReactNode; active?: boolean; isSecondary?: boolean }) => (
     <div className={`flex justify-between items-center p-3 rounded-xl mb-1 transition-all ${active
-        ? 'bg-emerald-50 border border-emerald-100 translate-x-1 shadow-sm'
-        : 'hover:bg-slate-50'
+        ? 'bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800 translate-x-1 shadow-sm'
+        : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'
         } ${isSecondary ? 'opacity-60 saturate-0 scale-95' : ''}`}>
         <div className="flex items-center gap-3">
-            <div className={`p-1.5 rounded-full ${active ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>
+            <div className={`p-1.5 rounded-full ${active ? 'bg-emerald-100 dark:bg-emerald-800 text-emerald-600 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'}`}>
                 {icon}
             </div>
-            <span className={`font-medium ${active ? 'text-emerald-700' : 'text-slate-700'}`}>{name}</span>
+            <span className={`font-medium ${active ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'}`}>{name}</span>
         </div>
-        <span className={`font-mono ${active ? 'text-emerald-700 font-bold bg-white px-2 py-0.5 rounded-md shadow-sm' : 'text-slate-600'}`}>{time}</span>
+        <span className={`font-mono ${active ? 'text-emerald-700 dark:text-emerald-400 font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-md shadow-sm' : 'text-slate-600 dark:text-slate-400'}`}>{time}</span>
     </div>
 );
 
