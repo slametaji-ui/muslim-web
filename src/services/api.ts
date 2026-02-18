@@ -51,13 +51,18 @@ export interface Surah {
 }
 
 // Simplified interface based on actual API response
+// Simplified interface based on actual API response
 export interface Verse {
     id: string;
-    surah: string;
-    ayah: string;
-    arab: string;
-    latin: string;
-    text: string; // Translation
+    surah: any;
+    ayah: string | number;
+    arab?: string;
+    latin?: string;
+    text?: string;
+    // New fields from local backend
+    textArabic?: string;
+    textLatin?: string;
+    textId?: string;
     audio: string;
 }
 
@@ -228,130 +233,193 @@ export const api = {
     },
 
     // Get All Surahs
-    getQuranSurahs: async (): Promise<any[]> => {
-        try {
-            // Endpoint: https://api.myquran.com/v2/quran/surat/semua
-            const response = await axios.get('https://api.myquran.com/v2/quran/surat/semua');
-            if (response.data.status) {
-                return response.data.data;
+    getQuranSurahs: async (forceRefresh = false): Promise<any[]> => {
+        const cacheKey = 'muslim_app_quran_surahs';
+        const data = await api.fetchWithCache(cacheKey, async () => {
+            try {
+                // Endpoint: https://api.myquran.com/v2/quran/surat/semua
+                const response = await axios.get('https://api.myquran.com/v2/quran/surat/semua');
+                if (response.data.status) {
+                    return response.data.data;
+                }
+                return [];
+            } catch (error) {
+                console.error('Error fetching surahs:', error);
+                return [];
             }
-            return [];
-        } catch (error) {
-            console.error('Error fetching surahs:', error);
-            return [];
-        }
+        }, forceRefresh);
+        return data || [];
     },
 
     // Get Surah Details (Header + Verses)
-    getSurahDetails: async (id: number): Promise<SurahDetail | null> => {
-        try {
-            let surahInfo: any = null;
-            let verseCount = 0;
-
-            // 1. Get Header Info
+    getSurahDetails: async (id: number, forceRefresh = false): Promise<SurahDetail | null> => {
+        const cacheKey = `muslim_app_surah_detail_${id}`;
+        return api.fetchWithCache(cacheKey, async () => {
             try {
-                const headerResponse = await axios.get(`https://api.myquran.com/v2/quran/surat/${id}`);
-                if (headerResponse.data.status) {
-                    surahInfo = headerResponse.data.data;
-                    verseCount = surahInfo.number_of_verses;
+                let surahInfo: any = null;
+                let verseCount = 0;
+
+                // 1. Get Header Info
+                try {
+                    const headerResponse = await axios.get(`https://api.myquran.com/v2/quran/surat/${id}`);
+                    if (headerResponse.data.status) {
+                        surahInfo = headerResponse.data.data;
+                        verseCount = surahInfo.number_of_verses;
+                    }
+                } catch (e) {
+                    console.warn(`Header fetch failed for ${id}, checking fallback...`);
                 }
-            } catch (e) {
-                console.warn(`Header fetch failed for ${id}, checking fallback...`);
-            }
 
-            // Fallback for 114 or others
-            if (!surahInfo) {
-                if (id === 114) {
-                    surahInfo = FALLBACK_SURAH_114;
-                    verseCount = 6;
-                } else {
-                    return null; // Cannot proceed without header
+                // Fallback for 114 or others
+                if (!surahInfo) {
+                    if (id === 114) {
+                        surahInfo = FALLBACK_SURAH_114;
+                        verseCount = 6;
+                    } else {
+                        return null; // Cannot proceed without header
+                    }
                 }
+
+                // 2. Get Verses (Batched Strategy to bypass API limits)
+                const BATCH_SIZE = 20;
+                const batchPromises = [];
+
+                for (let i = 1; i <= verseCount; i += BATCH_SIZE) {
+                    const start = i;
+                    const end = Math.min(i + BATCH_SIZE - 1, verseCount);
+                    batchPromises.push(
+                        axios.get(`https://api.myquran.com/v2/quran/ayat/${id}/${start}-${end}`)
+                            .then(res => res.data.status ? res.data.data : [])
+                            .catch(err => {
+                                console.error(`Error fetching batch ${start}-${end}:`, err);
+                                return [];
+                            })
+                    );
+                }
+
+                const batchResults = await Promise.all(batchPromises);
+                const verses: Verse[] = batchResults.flat();
+
+                return {
+                    ...surahInfo,
+                    verses: verses
+                };
+            } catch (error) {
+                console.error('Error fetching surah details:', error);
+                return null;
             }
-
-            // 2. Get Verses (Batched Strategy to bypass API limits)
-            const BATCH_SIZE = 20;
-            const batchPromises = [];
-
-            for (let i = 1; i <= verseCount; i += BATCH_SIZE) {
-                const start = i;
-                const end = Math.min(i + BATCH_SIZE - 1, verseCount);
-                batchPromises.push(
-                    axios.get(`https://api.myquran.com/v2/quran/ayat/${id}/${start}-${end}`)
-                        .then(res => res.data.status ? res.data.data : [])
-                        .catch(err => {
-                            console.error(`Error fetching batch ${start}-${end}:`, err);
-                            return [];
-                        })
-                );
-            }
-
-            const batchResults = await Promise.all(batchPromises);
-            const verses: Verse[] = batchResults.flat();
-
-            return {
-                ...surahInfo,
-                verses: verses
-            };
-        } catch (error) {
-            console.error('Error fetching surah details:', error);
-            return null;
-        }
+        }, forceRefresh);
     },
 
     // Get All Juz
-    getAllJuz: async (): Promise<Juz[]> => {
-        try {
-            const response = await axios.get('https://api.myquran.com/v2/quran/juz/semua');
-            if (response.data.status) {
-                return response.data.data;
+    getAllJuz: async (forceRefresh = false): Promise<Juz[]> => {
+        const cacheKey = 'muslim_app_quran_juzs';
+        const data = await api.fetchWithCache(cacheKey, async () => {
+            try {
+                const response = await axios.get('https://api.myquran.com/v2/quran/juz/semua');
+                if (response.data.status) {
+                    return response.data.data;
+                }
+                return [];
+            } catch (error) {
+                console.error('Error fetching juz list:', error);
+                return [];
             }
-            return [];
-        } catch (error) {
-            console.error('Error fetching juz list:', error);
-            return [];
-        }
-    },
-
-    // Get All Themes
-    getAllThemes: async (): Promise<Theme[]> => {
-        try {
-            const response = await axios.get('https://api.myquran.com/v2/quran/tema/semua');
-            if (response.data.status) {
-                return response.data.data;
-            }
-            return [];
-        } catch (error) {
-            console.error('Error fetching themes:', error);
-            return [];
-        }
+        }, forceRefresh);
+        return data || [];
     },
 
     // Get Juz Verses
-    getJuzVerses: async (id: number): Promise<Verse[]> => {
-        try {
-            const response = await axios.get(`https://api.myquran.com/v2/quran/ayat/juz/${id}`);
-            if (response.data.status) {
-                return response.data.data;
+    getJuzVerses: async (id: number, forceRefresh = false): Promise<Verse[]> => {
+        const cacheKey = `muslim_app_quran_juz_${id}`;
+        const data = await api.fetchWithCache(cacheKey, async () => {
+            try {
+                const response = await axios.get(`https://api.myquran.com/v2/quran/ayat/juz/${id}`);
+                if (response.data.status) {
+                    return response.data.data.map((v: any) => ({
+                        id: v.id,
+                        surah: v.surah,
+                        ayah: v.ayah,
+                        arab: v.arab,
+                        latin: v.latin,
+                        text: v.text,
+                        audio: v.audio
+                    }));
+                }
+                return [];
+            } catch (error) {
+                console.error(`Error fetching juz verses ${id}:`, error);
+                return [];
             }
-            return [];
-        } catch (error) {
-            console.error('Error fetching juz verses:', error);
-            return [];
-        }
+        }, forceRefresh);
+        return data || [];
+    },
+
+
+    // Get All Themes
+    getAllThemes: async (forceRefresh = false): Promise<Theme[]> => {
+        const cacheKey = 'muslim_app_quran_themes';
+        const data = await api.fetchWithCache(cacheKey, async () => {
+            try {
+                // Using local backend
+                const response = await axios.get('http://localhost:3000/quran/themes');
+                // Backend returns array directly, or we need to check structure
+                if (Array.isArray(response.data)) {
+                    return response.data;
+                }
+                return [];
+            } catch (error) {
+                console.error('Error fetching themes:', error);
+                return [];
+            }
+        }, forceRefresh);
+        return data || [];
     },
 
     // Get Theme Verses
-    getThemeVerses: async (id: number): Promise<Verse[]> => {
-        try {
-            const response = await axios.get(`https://api.myquran.com/v2/quran/ayat/tema/${id}`);
-            if (response.data.status) {
-                return response.data.data;
+    getThemeVerses: async (id: number, forceRefresh = false): Promise<Verse[]> => {
+        const cacheKey = `muslim_app_quran_theme_verses_${id}`;
+        const data = await api.fetchWithCache(cacheKey, async () => {
+            try {
+                // Using local backend
+                const response = await axios.get(`http://localhost:3000/quran/theme/${id}`);
+                if (response.data && response.data.ayahs) {
+                    // Map backend response to Verse interface if needed, or update interface
+                    // Backend returns Ayah[] with surah object nested
+                    return response.data.ayahs.map((ayah: any) => ({
+                        id: ayah.id,
+                        surah: ayah.surah?.name || ayah.surahId, // Provide a string or object as expected
+                        ayah: ayah.numberInSurah,
+                        textArabic: ayah.textArabic,
+                        textLatin: ayah.textLatin,
+                        textId: ayah.translation || ayah.textId, // Check field name from seeding
+                        audio: ayah.audio
+                    }));
+                }
+                return [];
+            } catch (error) {
+                console.error('Error fetching theme verses:', error);
+                return [];
             }
-            return [];
-        } catch (error) {
-            console.error('Error fetching theme verses:', error);
-            return [];
+        }, forceRefresh);
+        return data || [];
+    },
+
+    // Save Last City to LocalStorage
+    saveLastCity: (city: City) => {
+        localStorage.setItem('muslim_app_last_city', JSON.stringify(city));
+    },
+
+    // Get Last City from LocalStorage
+    getLastCity: (): City | null => {
+        const cached = localStorage.getItem('muslim_app_last_city');
+        if (cached) {
+            try {
+                return JSON.parse(cached);
+            } catch (e) {
+                return null;
+            }
         }
+        return null;
     }
 };

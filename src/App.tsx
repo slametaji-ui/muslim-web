@@ -7,6 +7,8 @@ import QuranPage from './pages/QuranPage';
 import SurahDetailPage from './pages/SurahDetailPage';
 import JuzDetailPage from './pages/JuzDetailPage';
 import ThemeDetailPage from './pages/ThemeDetailPage';
+import QiblaPage from './pages/QiblaPage';
+import TasbihPage from './pages/TasbihPage';
 
 function App() {
     return (
@@ -18,6 +20,8 @@ function App() {
                     <Route path="/quran/:id" element={<SurahDetailPage />} />
                     <Route path="/quran/juz/:id" element={<JuzDetailPage />} />
                     <Route path="/quran/tema/:id" element={<ThemeDetailPage />} />
+                    <Route path="/qibla" element={<QiblaPage />} />
+                    <Route path="/tasbih" element={<TasbihPage />} />
                     <Route path="/calendar" element={<CalendarPage />} />
                 </Routes>
             </Layout>

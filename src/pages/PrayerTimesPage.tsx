@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api, City, PrayerTimes } from '../services/api';
-import { Search, MapPin, Loader2, Calendar as CalendarIcon, Navigation, ChevronDown, Sunrise, Sun, Sunset, Moon, CloudSun, CloudMoon, Coffee, Volume2, RotateCw } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Search, MapPin, Loader2, Calendar as CalendarIcon, Navigation, ChevronDown, Sunrise, Sun, Sunset, Moon, CloudSun, CloudMoon, Coffee, Volume2, RotateCw, Clock, CheckSquare, Square, Circle, BookOpen, Compass } from 'lucide-react';
 import { format, isSameDay, startOfWeek, endOfWeek, isWithinInterval, parse } from 'date-fns';
 import { id } from 'date-fns/locale';
 
@@ -40,6 +41,18 @@ const PrayerTimesPage: React.FC = () => {
     const [hijriDate, setHijriDate] = useState<HijriDateInfo | null>(null);
     const [notifiedPrayer, setNotifiedPrayer] = useState<string | null>(null);
     const [showAdzanModal, setShowAdzanModal] = useState(false);
+    const [prayerStatus, setPrayerStatus] = useState<Record<string, boolean>>(() => {
+        const saved = localStorage.getItem('muslim_app_prayer_status');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                // Only keep today's status
+                const today = format(new Date(), 'yyyy-MM-dd');
+                if (parsed.date === today) return parsed.status;
+            } catch (e) { return {}; }
+        }
+        return {};
+    });
 
     // Adzan Audio Source (Using a reliable external source or placeholder)
     const adzanAudioRef = React.useRef<HTMLAudioElement | null>(null);
@@ -50,6 +63,25 @@ const PrayerTimesPage: React.FC = () => {
             adzanAudioRef.current.currentTime = 0;
         }
         setShowAdzanModal(false);
+    };
+
+    const togglePrayerStatus = (prayerName: string) => {
+        setPrayerStatus(prev => {
+            const next = { ...prev, [prayerName]: !prev[prayerName] };
+            localStorage.setItem('muslim_app_prayer_status', JSON.stringify({
+                date: format(new Date(), 'yyyy-MM-dd'),
+                status: next
+            }));
+            return next;
+        });
+    };
+
+    const getTimeGreeting = () => {
+        const hour = currentTime.getHours();
+        if (hour >= 5 && hour < 11) return "Selamat Pagi";
+        if (hour >= 11 && hour < 15) return "Selamat Siang";
+        if (hour >= 15 && hour < 18) return "Selamat Sore";
+        return "Selamat Malam";
     };
 
     useEffect(() => {
@@ -142,7 +174,7 @@ const PrayerTimesPage: React.FC = () => {
                         if (diff > 0) {
                             const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                             const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                            setCountdown(`${hours} Jam ${minutes} Menit`);
+                            setCountdown(`${hours}h ${minutes}m`);
                         } else {
                             setCountdown('Waktu Tiba');
                         }
@@ -154,7 +186,13 @@ const PrayerTimesPage: React.FC = () => {
     }, [currentTime, schedule]);
 
     useEffect(() => {
-        handleGeolocation();
+        const cachedCity = api.getLastCity();
+        if (cachedCity) {
+            setCity(cachedCity);
+            loadData(cachedCity.id);
+        } else {
+            handleGeolocation();
+        }
     }, []);
 
     const handleGeolocation = () => {
@@ -253,6 +291,7 @@ const PrayerTimesPage: React.FC = () => {
         setCity(selectedCity);
         setSearchQuery(selectedCity.lokasi);
         setShowDropdown(false);
+        api.saveLastCity(selectedCity);
         loadData(selectedCity.id);
     };
 
@@ -295,21 +334,22 @@ const PrayerTimesPage: React.FC = () => {
     const displayedSchedule = activeTab === 'week' ? getCurrentWeekSchedule() : monthlySchedule;
 
     return (
-        <div className="max-w-md mx-auto w-full pb-20">
-            <div className="flex gap-2 mb-4 relative z-20">
+        <div className="bg-white dark:bg-slate-900 min-h-screen pb-24 transition-colors">
+            {/* Search & Header Controls */}
+            <div className="max-w-md mx-auto px-4 pt-6 flex gap-2 relative z-50">
                 <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <input
                         type="text"
                         placeholder="Cari kota..."
-                        className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm text-slate-800 dark:text-white placeholder-slate-400 transition-colors"
+                        className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-inner text-slate-800 dark:text-white placeholder-slate-400 transition-all text-sm"
                         value={searchQuery}
                         onChange={handleSearch}
                         onFocus={() => setShowDropdown(true)}
                         onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
                     />
                     {showDropdown && searchResults.length > 0 && (
-                        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 max-h-60 overflow-y-auto">
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 max-h-60 overflow-y-auto animate-in slide-in-from-top-2 duration-200">
                             {searchResults.map((city) => (
                                 <button
                                     key={city.id}
@@ -317,7 +357,7 @@ const PrayerTimesPage: React.FC = () => {
                                     onClick={() => selectCity(city)}
                                 >
                                     <MapPin size={16} className="text-emerald-500" />
-                                    <span className="text-slate-700 dark:text-slate-200 text-sm">{city.lokasi}</span>
+                                    <span className="text-slate-700 dark:text-slate-200 text-sm font-medium">{city.lokasi}</span>
                                 </button>
                             ))}
                         </div>
@@ -326,182 +366,263 @@ const PrayerTimesPage: React.FC = () => {
                 <button
                     onClick={handleGeolocation}
                     disabled={locating}
-                    className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 p-3 rounded-2xl hover:bg-emerald-200 dark:hover:bg-emerald-900/60 transition-colors disabled:opacity-50"
+                    className="bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 p-3 rounded-2xl hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-all disabled:opacity-50 border border-emerald-100/50 dark:border-emerald-800/50"
                 >
                     {locating ? <Loader2 className="animate-spin" size={20} /> : <Navigation size={20} />}
                 </button>
                 <button
                     onClick={handleManualRefresh}
                     disabled={loading}
-                    className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 p-3 rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
-                    title="Muat Ulang Data"
+                    className="bg-slate-50 dark:bg-slate-800/50 text-slate-400 dark:text-slate-500 p-3 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all border border-slate-100 dark:border-slate-800"
                 >
                     <RotateCw size={20} className={loading ? 'animate-spin' : ''} />
                 </button>
             </div>
 
             {loading ? (
-                <div className="flex flex-col justify-center items-center h-64 gap-4">
-                    <Loader2 className="animate-spin text-emerald-600" size={40} />
-                    <p className="text-slate-400 text-sm animate-pulse">Mengambil data jadwal...</p>
+                <div className="flex flex-col justify-center items-center h-[60vh] gap-4">
+                    <div className="relative">
+                        <Loader2 className="animate-spin text-emerald-600" size={48} />
+                        <div className="absolute inset-0 blur-xl bg-emerald-400/20 animate-pulse"></div>
+                    </div>
+                    <p className="text-slate-400 text-sm font-black uppercase tracking-widest animate-pulse">Menyiapkan Jadwal...</p>
                 </div>
             ) : schedule ? (
-                <div className="space-y-6">
-
-                    {/* Enhanced Hero UI */}
-                    <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-3xl p-1 shadow-xl shadow-emerald-100 overflow-hidden relative">
-                        <div className="bg-white/10 p-4 rounded-t-3xl flex flex-col gap-2 text-white backdrop-blur-sm relative z-10">
-                            <div className="flex justify-between items-start">
-                                <div className="flex items-center gap-2">
-                                    <MapPin size={16} className="text-emerald-200" />
-                                    <span className="font-semibold text-sm tracking-wide">{city?.lokasi}</span>
+                <div className="max-w-md mx-auto py-8 px-4">
+                    {/* Greeting Section */}
+                    <div className="flex justify-between items-end mb-8 px-2 animate-in fade-in slide-in-from-top-4 duration-700">
+                        <div>
+                            <h2 className="text-slate-400 dark:text-slate-500 font-bold text-[10px] uppercase tracking-[0.2em] mb-1">
+                                {getTimeGreeting()}
+                            </h2>
+                            <h1 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight leading-none">
+                                Assalamu'alaikum
+                            </h1>
+                        </div>
+                        <div className="text-right">
+                            <div className="bg-emerald-50 dark:bg-emerald-900/20 px-4 py-2 rounded-2xl border border-emerald-100 dark:border-emerald-800/50 shadow-sm">
+                                <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-black uppercase tracking-widest mb-0.5">Masehi</div>
+                                <div className="text-xs font-black text-slate-700 dark:text-emerald-100">
+                                    {format(new Date(), 'dd MMM yyyy')}
                                 </div>
-                            </div>
-                            <div className="flex justify-between items-end border-t border-white/10 pt-2 mt-1">
-                                <div>
-                                    <div className="text-xs text-emerald-200 font-medium mb-0.5">Masehi</div>
-                                    <div className="font-bold text-sm">
-                                        {format(new Date(), 'EEEE, dd MMMM yyyy', { locale: id })}
-                                    </div>
-                                </div>
-                                {hijriDate && (
-                                    <div className="text-right">
-                                        <div className="text-xs text-emerald-200 font-medium mb-0.5">Hijriah</div>
-                                        <div className="font-bold text-sm">
-                                            {hijriDate.day} {hijriDate.month.en} {hijriDate.year}
-                                        </div>
-                                    </div>
-                                )}
                             </div>
                         </div>
+                    </div>
 
-                        <div className="p-6 relative text-center">
-                            {/* Background Pattern */}
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-10 pointer-events-none">
-                                <CalendarIcon size={140} />
+                    {/* Main Dashboard Hero */}
+                    <div className="bg-gradient-to-br from-emerald-600 to-teal-800 rounded-[3rem] p-1 shadow-2xl shadow-emerald-200/50 dark:shadow-none overflow-hidden relative group mb-10 transition-transform duration-500 hover:scale-[1.01]">
+                        {/* Background Decor */}
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-[80px] -mr-32 -mt-32"></div>
+                        <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-400/20 rounded-full blur-[60px] -ml-24 -mb-24"></div>
+
+                        <div className="bg-white/10 backdrop-blur-md p-6 rounded-t-[2.8rem] flex justify-between items-center relative z-10 border-b border-white/10">
+                            <div className="flex items-center gap-2 bg-black/20 px-3 py-1.5 rounded-full border border-white/10">
+                                <MapPin size={14} className="text-emerald-200" />
+                                <span className="font-black text-[10px] text-white tracking-widest uppercase">{city?.lokasi}</span>
                             </div>
-
-                            {activePrayer ? (
-                                <div className="animate-in zoom-in duration-500">
-                                    <p className="text-emerald-100 text-sm font-medium tracking-widest uppercase mb-2">Sedang Berlangsung</p>
-                                    <h2 className="text-4xl font-extrabold text-white mb-2 drop-shadow-sm">WAKTU {activePrayer.toUpperCase()}</h2>
-                                    <div className="inline-block bg-white/20 backdrop-blur-md rounded-full px-6 py-2 text-white font-mono font-bold mt-2">
-                                        {format(currentTime, 'HH:mm')}
-                                    </div>
-                                </div>
-                            ) : (
-                                <div>
-                                    <div className="mb-8">
-                                        <p className="text-emerald-200 text-xs font-bold tracking-widest uppercase mb-2">Waktu Sekarang</p>
-                                        <div className="text-6xl font-black text-white tabular-nums tracking-tight font-mono drop-shadow-sm">
-                                            {format(currentTime, 'HH:mm')}
-                                            <span className="text-2xl text-emerald-200/80 ml-2 align-top mt-2 inline-block font-bold">
-                                                {format(currentTime, 'ss')}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div className="bg-black/10 backdrop-blur-sm rounded-2xl p-4 border border-white/5 inline-block min-w-[280px]">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <span className="text-emerald-100 text-xs">Menuju {nextPrayer?.name}</span>
-                                            <span className="text-emerald-100 text-xs text-right">Adzan {nextPrayer?.time}</span>
-                                        </div>
-                                        <div className="text-xl font-bold text-white font-mono border-t border-white/10 pt-2 mt-1">
-                                            {countdown}
-                                        </div>
-                                    </div>
+                            {hijriDate && (
+                                <div className="text-[10px] font-black text-emerald-100 uppercase tracking-[0.15em]">
+                                    {hijriDate.day} {hijriDate.month.en}
                                 </div>
                             )}
                         </div>
-                    </div>
 
-                    {/* Daily Schedule List with Icons */}
-                    <div className="bg-white dark:bg-slate-800 rounded-3xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 transition-colors">
-                        <h3 className="text-slate-800 dark:text-white font-bold mb-4 px-2 flex items-center gap-2">
-                            <CalendarIcon size={18} className="text-emerald-500" />
-                            Jadwal Hari Ini
-                        </h3>
-                        <div className="space-y-1">
-                            <PrayerItem icon={<CloudMoon size={18} />} name="Imsak" time={schedule.jadwal.imsak} />
-                            <PrayerItem icon={<Sunrise size={18} />} name="Subuh" time={schedule.jadwal.subuh} active={nextPrayer?.name === 'Subuh'} />
-                            <PrayerItem icon={<Sun size={18} />} name="Terbit" time={schedule.jadwal.terbit} isSecondary />
-                            <PrayerItem icon={<Coffee size={18} />} name="Dhuha" time={schedule.jadwal.dhuha} isSecondary />
-                            <PrayerItem icon={<Sun size={18} className="rotate-0" />} name="Dzuhur" time={schedule.jadwal.dzuhur} active={nextPrayer?.name === 'Dzuhur'} />
-                            <PrayerItem icon={<CloudSun size={18} />} name="Ashar" time={schedule.jadwal.ashar} active={nextPrayer?.name === 'Ashar'} />
-                            <PrayerItem icon={<Sunset size={18} />} name="Maghrib" time={schedule.jadwal.maghrib} active={nextPrayer?.name === 'Maghrib'} />
-                            <PrayerItem icon={<Moon size={18} />} name="Isya" time={schedule.jadwal.isya} active={nextPrayer?.name === 'Isya'} />
+                        <div className="p-10 relative text-center overflow-hidden">
+                            <div className="relative z-10">
+                                <div className="mb-10">
+                                    <div className="text-[80px] font-black text-white tabular-nums tracking-tighter font-mono drop-shadow-2xl leading-none flex items-start justify-center">
+                                        {format(currentTime, 'HH:mm')}
+                                        <span className="text-2xl text-emerald-200/60 ml-2 mt-4 font-black animate-pulse tabular-nums">
+                                            {format(currentTime, 'ss')}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white/10 backdrop-blur-xl rounded-[2.5rem] p-6 border border-white/20 inline-block w-full shadow-2xl overflow-hidden relative group/card">
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover/card:translate-x-full transition-transform duration-1000"></div>
+                                    <div className="flex items-center justify-between mb-4 px-1">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)]"></div>
+                                            <span className="text-emerald-50 text-[10px] font-black uppercase tracking-widest">Berikutnya: {nextPrayer?.name}</span>
+                                        </div>
+                                        <span className="text-emerald-100 text-[10px] font-bold uppercase tracking-widest bg-emerald-900/40 px-3 py-1 rounded-full">{nextPrayer?.time}</span>
+                                    </div>
+                                    <div className="text-4xl font-black text-white font-mono border-t border-white/10 pt-4 flex items-center justify-center gap-4">
+                                        <Clock size={32} className="text-emerald-300" />
+                                        {countdown}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Combined Schedule Card */}
-                    <div className="bg-white dark:bg-slate-800 rounded-3xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-700 transition-colors">
-                        <div className="p-5 border-b border-slate-50 dark:border-slate-700">
-                            <h2 className="text-lg font-bold text-slate-800 dark:text-white">
-                                Prayer times in <span className="text-emerald-600 dark:text-emerald-400">{city?.lokasi}</span>
-                            </h2>
-                            <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">Jadwal sholat terpercaya sesuai Kemenag RI</p>
+                    {/* Features Quick Access Grid */}
+                    <div className="grid grid-cols-2 gap-4 mb-10 px-1">
+                        <Link to="/quran" className="bg-gradient-to-br from-indigo-500 to-indigo-700 p-6 rounded-[2.5rem] text-white shadow-xl shadow-indigo-200 dark:shadow-none group relative overflow-hidden transition-all hover:-translate-y-1">
+                            <div className="absolute top-0 right-0 p-4 opacity-20 transition-transform group-hover:scale-125 group-hover:rotate-12 duration-500">
+                                <BookOpen size={60} />
+                            </div>
+                            <h3 className="font-black text-lg mb-1 relative z-10 tracking-tight">Al-Quran</h3>
+                            <p className="text-[10px] text-indigo-100 font-bold uppercase tracking-widest relative z-10 opacity-70">Baca & Simak</p>
+                        </Link>
+
+                        <Link to="/tasbih" className="bg-gradient-to-br from-emerald-500 to-teal-700 p-6 rounded-[2.5rem] text-white shadow-xl shadow-emerald-200 dark:shadow-none group relative overflow-hidden transition-all hover:-translate-y-1">
+                            <div className="absolute top-0 right-0 p-4 opacity-20 transition-transform group-hover:scale-125 group-hover:rotate-12 duration-500">
+                                <RotateCw size={60} />
+                            </div>
+                            <h3 className="font-black text-lg mb-1 relative z-10 tracking-tight">Tasbih</h3>
+                            <p className="text-[10px] text-emerald-100 font-bold uppercase tracking-widest relative z-10 opacity-70">Dzikir Harian</p>
+                        </Link>
+                        
+                        <Link to="/qibla" className="bg-white dark:bg-slate-800 p-6 rounded-[2.5rem] shadow-lg shadow-slate-200 dark:shadow-none border border-slate-100 dark:border-slate-700 group relative overflow-hidden transition-all hover:-translate-y-1">
+                            <div className="absolute top-0 right-0 p-4 text-emerald-600 dark:text-emerald-500 opacity-10 transition-transform group-hover:scale-125 group-hover:rotate-12 duration-500">
+                                <Compass size={60} />
+                            </div>
+                            <h3 className="font-black text-lg mb-1 text-slate-800 dark:text-white tracking-tight">Kiblat</h3>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Arah Sholat</p>
+                        </Link>
+                        
+                        <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 flex flex-col justify-center gap-2">
+                             <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.15em] mb-1 leading-none">Progres Hari Ini</p>
+                             <div className="flex items-center gap-3">
+                                 <span className="text-2xl font-black text-slate-800 dark:text-white leading-none">{Object.values(prayerStatus).filter(Boolean).length}/5</span>
+                                 <div className="flex-1 h-3 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner flex">
+                                     <div 
+                                         className="bg-gradient-to-r from-emerald-400 to-emerald-600 h-full rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                                         style={{ width: `${(Object.values(prayerStatus).filter(Boolean).length / 5) * 100}%` }}
+                                     ></div>
+                                 </div>
+                             </div>
+                        </div>
+                    </div>
+
+                    {/* Prayer Times Section */}
+                    <div className="px-1 overflow-visible">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest pl-2">Jadwal Sholat</h2>
+                            <div className="h-px bg-slate-100 dark:bg-slate-800 flex-1 ml-4 mr-4"></div>
                         </div>
 
-                        <div className="flex border-b border-slate-100 dark:border-slate-700">
+                        {schedule && (
+                            <div className="grid grid-cols-1 gap-4">
+                                <PrayerItem 
+                                    icon={<Sunrise size={20} />} 
+                                    name="Subuh" 
+                                    time={schedule.jadwal.subuh} 
+                                    active={activePrayer === 'Subuh' || nextPrayer?.name === 'Subuh'}
+                                    checked={!!prayerStatus['Subuh']}
+                                    onToggle={() => togglePrayerStatus('Subuh')}
+                                />
+                                <PrayerItem 
+                                    icon={<Sun size={20} />} 
+                                    name="Dzuhur" 
+                                    time={schedule.jadwal.dzuhur} 
+                                    active={activePrayer === 'Dzuhur' || nextPrayer?.name === 'Dzuhur'}
+                                    checked={!!prayerStatus['Dzuhur']}
+                                    onToggle={() => togglePrayerStatus('Dzuhur')}
+                                />
+                                <PrayerItem 
+                                    icon={<Sun size={20} className="rotate-45" />} 
+                                    name="Ashar" 
+                                    time={schedule.jadwal.ashar} 
+                                    active={activePrayer === 'Ashar' || nextPrayer?.name === 'Ashar'}
+                                    checked={!!prayerStatus['Ashar']}
+                                    onToggle={() => togglePrayerStatus('Ashar')}
+                                />
+                                <PrayerItem 
+                                    icon={<Moon size={20} />} 
+                                    name="Maghrib" 
+                                    time={schedule.jadwal.maghrib} 
+                                    active={activePrayer === 'Maghrib' || nextPrayer?.name === 'Maghrib'}
+                                    checked={!!prayerStatus['Maghrib']}
+                                    onToggle={() => togglePrayerStatus('Maghrib')}
+                                />
+                                <PrayerItem 
+                                    icon={<Moon size={20} fill="currentColor" />} 
+                                    name="Isya" 
+                                    time={schedule.jadwal.isya} 
+                                    active={activePrayer === 'Isya' || nextPrayer?.name === 'Isya'}
+                                    checked={!!prayerStatus['Isya']}
+                                    onToggle={() => togglePrayerStatus('Isya')}
+                                />
+                                
+                                <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 opacity-60">
+                                    <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-3xl flex justify-between items-center">
+                                        <div>
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Imsak & Terbit</p>
+                                            <div className="flex gap-4">
+                                                <div className="text-xs font-black text-slate-700 dark:text-slate-300">Imsak {schedule.jadwal.imsak}</div>
+                                                <div className="text-xs font-black text-slate-700 dark:text-slate-300">Terbit {schedule.jadwal.terbit}</div>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                             <div className="text-[10px] text-emerald-600 font-black uppercase tracking-[0.2em] mb-1">Dhuha</div>
+                                             <div className="text-xl font-black text-slate-800 dark:text-white tabular-nums leading-none">{schedule.jadwal.dhuha}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    
+                    {/* Monthly Preview Tab */}
+                    <div className="mt-12 bg-white dark:bg-slate-800 rounded-[2.5rem] overflow-hidden shadow-sm border border-slate-50 dark:border-slate-800">
+                         <div className="flex border-b border-slate-50 dark:border-slate-800">
                             <button
                                 onClick={() => setActiveTab('week')}
-                                className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'week' ? 'text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/20' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                                className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'week' ? 'bg-emerald-50 text-emerald-600 border-b-2 border-emerald-500' : 'text-slate-400 dark:text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
                             >
-                                This Week
+                                Minggu Ini
                             </button>
                             <button
                                 onClick={() => setActiveTab('month')}
-                                className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'month' ? 'text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/20' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                                className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'month' ? 'bg-emerald-50 text-emerald-600 border-b-2 border-emerald-500' : 'text-slate-400 dark:text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
                             >
-                                This Month
+                                Bulan Ini
                             </button>
                         </div>
-
-                        <div className="overflow-x-auto p-0 animate-in fade-in duration-300">
-                            <table className="w-full text-sm text-left text-slate-600 dark:text-slate-300">
-                                <thead className="text-xs text-slate-500 dark:text-slate-400 uppercase bg-slate-50 dark:bg-slate-700/50">
-                                    <tr>
-                                        <th className="px-4 py-3 min-w-[80px]">Tgl</th>
-                                        <th className="px-2 py-3">Subuh</th>
-                                        <th className="px-2 py-3">Dzuhur</th>
-                                        <th className="px-2 py-3">Ashar</th>
-                                        <th className="px-2 py-3">Maghrib</th>
-                                        <th className="px-2 py-3 pr-4">Isya</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {displayedSchedule.map((day, idx) => {
-                                        const dayDate = parseApiDate(day.tanggal);
-                                        const isToday = isSameDay(dayDate, new Date());
-
-                                        return (
-                                            <tr key={idx} className={`border-b border-slate-100 dark:border-slate-700 last:border-0 transition-colors ${isToday ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}>
-                                                <td className="px-4 py-3 font-medium text-slate-900 dark:text-white whitespace-nowrap">
-                                                    {formatMonthlyDate(day.tanggal)}
-                                                    {isToday && <span className="ml-1 inline-block w-2 h-2 rounded-full bg-emerald-500"></span>}
-                                                </td>
-                                                <td className="px-2 py-3">{day.subuh}</td>
-                                                <td className="px-2 py-3">{day.dzuhur}</td>
-                                                <td className="px-2 py-3">{day.ashar}</td>
-                                                <td className="px-2 py-3">{day.maghrib}</td>
-                                                <td className="px-2 py-3 pr-4">{day.isya}</td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
+                        <div className="overflow-x-auto p-2">
+                             <table className="w-full text-[10px] text-left">
+                                 <thead className="text-slate-400 font-black uppercase tracking-widest bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                                     <tr>
+                                         <th className="px-4 py-3">Tgl</th>
+                                         <th className="px-2 py-3">Subuh</th>
+                                         <th className="px-2 py-3">Dzuhur</th>
+                                         <th className="px-2 py-3">Ashar</th>
+                                         <th className="px-2 py-3">Maghrib</th>
+                                         <th className="px-2 py-3 pr-4">Isya</th>
+                                     </tr>
+                                 </thead>
+                                 <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
+                                     {displayedSchedule.map((day, idx) => {
+                                         const dayDate = parseApiDate(day.tanggal);
+                                         const isToday = isSameDay(dayDate, new Date());
+                                         return (
+                                             <tr key={idx} className={`${isToday ? 'bg-emerald-50/50 dark:bg-emerald-900/10' : ''}`}>
+                                                 <td className="px-4 py-3 font-bold text-slate-700 dark:text-slate-300">
+                                                     {formatMonthlyDate(day.tanggal)}
+                                                 </td>
+                                                 <td className="px-2 py-3 font-mono">{day.subuh}</td>
+                                                 <td className="px-2 py-3 font-mono">{day.dzuhur}</td>
+                                                 <td className="px-2 py-3 font-mono">{day.ashar}</td>
+                                                 <td className="px-2 py-3 font-mono">{day.maghrib}</td>
+                                                 <td className="px-2 py-3 pr-4 font-mono">{day.isya}</td>
+                                             </tr>
+                                         );
+                                     })}
+                                 </tbody>
+                             </table>
                         </div>
                     </div>
-
                 </div>
             ) : (
                 <div className="text-center mt-20 px-6">
-                    <div className="bg-emerald-50 p-6 rounded-full inline-block mb-4">
+                    <div className="bg-emerald-50 p-6 rounded-full inline-block mb-4 shadow-inner">
                         <MapPin size={40} className="text-emerald-500" />
                     </div>
                     <h2 className="text-xl font-bold text-slate-800 mb-2">Lokasi Tidak Ditemukan</h2>
                     <p className="text-slate-500 mb-6">
-                        Kami tidak dapat mendeteksi lokasi Anda. Silakan cari kota Anda secara manual.
+                        Kami tidak dapat mendeteksi lokasi Anda secara otomatis.
                     </p>
                 </div>
             )}
@@ -564,18 +685,71 @@ const getNextPrayer = (schedule: any) => {
     return next || times[0];
 };
 
-const PrayerItem = ({ name, time, icon, active = false, isSecondary = false }: { name: string; time: string; icon: React.ReactNode; active?: boolean; isSecondary?: boolean }) => (
-    <div className={`flex justify-between items-center p-3 rounded-xl mb-1 transition-all ${active
-        ? 'bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800 translate-x-1 shadow-sm'
-        : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'
-        } ${isSecondary ? 'opacity-60 saturate-0 scale-95' : ''}`}>
-        <div className="flex items-center gap-3">
-            <div className={`p-1.5 rounded-full ${active ? 'bg-emerald-100 dark:bg-emerald-800 text-emerald-600 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'}`}>
+
+
+const PrayerItem = ({ 
+    name, 
+    time, 
+    icon, 
+    active = false, 
+    isSecondary = false, 
+    checked = false, 
+    onToggle 
+}: { 
+    name: string; 
+    time: string; 
+    icon: React.ReactNode; 
+    active?: boolean; 
+    isSecondary?: boolean;
+    checked?: boolean;
+    onToggle?: () => void;
+}) => (
+    <div 
+        onClick={onToggle}
+        className={`group flex items-center justify-between p-5 rounded-[2rem] transition-all duration-300 cursor-pointer relative overflow-hidden ${
+        active 
+            ? 'bg-emerald-600 text-white shadow-xl shadow-emerald-200 dark:shadow-none scale-[1.03] z-10' 
+            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-slate-700 hover:border-emerald-200 hover:shadow-lg'
+        } ${checked && !active ? 'opacity-60 grayscale-[0.5]' : ''}`}
+    >
+        {active && (
+            <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent -translate-x-full group-hover/card:translate-x-full transition-transform duration-1000"></div>
+        )}
+        
+        <div className="flex items-center gap-4 relative z-10">
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:rotate-12 ${
+                active ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-700 text-emerald-600'
+            }`}>
                 {icon}
             </div>
-            <span className={`font-medium ${active ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'}`}>{name}</span>
+            <div>
+                <p className={`text-[10px] font-black uppercase tracking-[0.2em] mb-0.5 ${active ? 'text-emerald-100' : 'text-slate-400'}`}>
+                    {name}
+                </p>
+                <p className="text-xl font-black tabular-nums tracking-tight">
+                    {time}
+                </p>
+            </div>
         </div>
-        <span className={`font-mono ${active ? 'text-emerald-700 dark:text-emerald-400 font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-md shadow-sm' : 'text-slate-600 dark:text-slate-400'}`}>{time}</span>
+        
+        <div className="flex items-center gap-3 relative z-10">
+            {active && (
+                <div className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest animate-pulse">
+                    Waktunya
+                </div>
+            )}
+            {!isSecondary && (
+                <div 
+                    className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
+                        checked 
+                            ? (active ? 'bg-white text-emerald-600' : 'bg-emerald-100 text-emerald-600 scale-110 shadow-inner') 
+                            : (active ? 'bg-white/20 text-white border border-white/40' : 'bg-slate-50 dark:bg-slate-700 text-slate-300 dark:text-slate-500 border border-slate-200 dark:border-slate-600 hover:scale-110')
+                    }`}
+                >
+                    {checked ? <CheckSquare size={18} /> : <Circle size={18} className="opacity-40" />}
+                </div>
+            )}
+        </div>
     </div>
 );
 

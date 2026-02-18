@@ -151,10 +151,10 @@ const SurahDetailPage: React.FC = () => {
                             </div>
                             <div className="flex gap-2">
                                 <button
-                                    onClick={() => toggleAudio(verse.audio, parseInt(verse.ayah))}
-                                    className={`p-2 rounded-full transition-colors ${isPlaying && currentVerseAudio === parseInt(verse.ayah) ? 'text-emerald-600 bg-emerald-100' : 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50'}`}
+                                    onClick={() => toggleAudio(verse.audio, Number(verse.ayah))}
+                                    className={`p-2 rounded-full transition-colors ${isPlaying && currentVerseAudio === Number(verse.ayah) ? 'text-emerald-600 bg-emerald-100' : 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50'}`}
                                 >
-                                    {isPlaying && currentVerseAudio === parseInt(verse.ayah) ? <Pause size={18} /> : <Play size={18} />}
+                                    {isPlaying && currentVerseAudio === Number(verse.ayah) ? <Pause size={18} /> : <Play size={18} />}
                                 </button>
                                 <button className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-white transition-colors">
                                     <Share2 size={18} />

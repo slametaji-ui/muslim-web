@@ -60,11 +60,11 @@ const ThemeDetailPage: React.FC = () => {
                             </div>
 
                             <div className="text-right mb-4">
-                                <p className="font-serif text-2xl leading-loose text-slate-800" dir="rtl">{verse.arab}</p>
+                                <p className="font-serif text-2xl leading-loose text-slate-800" dir="rtl">{verse.textArabic || verse.arab}</p>
                             </div>
                             <div className="space-y-2">
-                                <p className="text-emerald-600 text-sm italic">{verse.latin}</p>
-                                <p className="text-slate-600 text-sm leading-relaxed">{verse.text}</p>
+                                <p className="text-emerald-600 text-sm italic">{verse.textLatin || verse.latin}</p>
+                                <p className="text-slate-600 text-sm leading-relaxed">{verse.textId || verse.text}</p>
                             </div>
                         </div>
                     ))
