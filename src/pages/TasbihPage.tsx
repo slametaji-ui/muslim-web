@@ -170,13 +170,13 @@ const TasbihPage: React.FC = () => {
             </div>
 
             {/* Counter Section - Compacted */}
-            <div className="flex-1 flex flex-col items-center justify-center p-4">
+            <div className="flex-1 flex flex-col items-center gap-4 justify-center p-4">
                 <div className="relative mb-6">
                     <div className="absolute inset-0 scale-[1.5] blur-3xl rounded-full bg-emerald-400/5 pointer-events-none"></div>
                     <div className="text-[100px] font-black text-slate-800 dark:text-white leading-none tracking-tighter tabular-nums font-mono">
                         {count.toString().padStart(2, '0')}
                     </div>
-                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-slate-900 dark:bg-emerald-600 text-white rounded-full px-3 py-0.5 flex items-center gap-1.5 shadow-lg border border-white/10">
+                    <div className="absolute mt-1 left-1/2 -translate-x-1/2 bg-slate-900 dark:bg-emerald-600 text-white rounded-full px-3 py-0.5 flex items-center gap-1.5 shadow-lg border border-white/10">
                         <Target size={10} className="text-emerald-400" />
                         <span className="text-[9px] font-black uppercase tracking-widest">Goal: {target || '∞'}</span>
                     </div>

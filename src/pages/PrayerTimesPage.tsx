@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api, City, PrayerTimes } from '../services/api';
 import { Link } from 'react-router-dom';
-import { Search, MapPin, Loader2, Calendar as CalendarIcon, Navigation, ChevronDown, Sunrise, Sun, Sunset, Moon, CloudSun, CloudMoon, Coffee, Volume2, RotateCw, Clock, CheckSquare, Square, Circle, BookOpen, Compass } from 'lucide-react';
+import { Search, MapPin, Loader2, Calendar as CalendarIcon, Navigation, ChevronDown, Sunrise, Sun, Sunset, Moon, CloudSun, CloudMoon, Coffee, Volume2, RotateCw, Clock, CheckSquare, Square, Circle, BookOpen, Compass, Download } from 'lucide-react';
 import { format, isSameDay, startOfWeek, endOfWeek, isWithinInterval, parse } from 'date-fns';
 import { id } from 'date-fns/locale';
 import PageHeader from '../components/PageHeader';
@@ -455,10 +455,11 @@ const PrayerTimesPage: React.FC = () => {
                                 {!window.matchMedia('(display-mode: standalone)').matches && (
                                     <button 
                                         onClick={() => window.dispatchEvent(new Event('beforeinstallprompt'))}
-                                        className="p-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl"
+                                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl shadow-lg shadow-emerald-200 dark:shadow-none active:scale-95 transition-all animate-pulse"
                                         title="Pasang Aplikasi"
                                     >
-                                        <Download size={16} />
+                                        <Download size={16} className="fill-white/20" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest">Pasang App</span>
                                     </button>
                                 )}
                             </div>

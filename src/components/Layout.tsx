@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Calendar, Moon, Clock, BookOpen, Sun, Compass, RotateCw } from 'lucide-react';
+import { Calendar, Moon, Clock, BookOpen, Sun, Compass, RotateCw, Home, MoonStar, Coins, Heart } from 'lucide-react';
 import InstallPWA from './InstallPWA';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -54,11 +54,11 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <div className="fixed bottom-0 left-0 right-0 px-4 pb-[env(safe-area-inset-bottom,1.5rem)] z-[100] pointer-events-none">
                 <div className="max-w-md mx-auto pointer-events-auto">
                     <nav className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-white/20 dark:border-slate-800/40 px-2 py-3 rounded-[2.5rem] flex justify-around items-center shadow-[0_15px_50px_-12px_rgba(0,0,0,0.4)] dark:shadow-none mb-2">
-                        <MobileNavLink to="/" icon={<Clock size={22} />} label="Sholat" active={isActive('/')} />
+                        <MobileNavLink to="/" icon={<Home size={22} />} label="Beranda" active={isActive('/')} />
                         <MobileNavLink to="/quran" icon={<BookOpen size={22} />} label="Quran" active={isActive('/quran')} />
-                        <MobileNavLink to="/ramadan" icon={<Sun size={22} />} label="Ramadan" active={isActive('/ramadan')} />
-                        <MobileNavLink to="/zakat" icon={<RotateCw size={22} />} label="Zakat" active={isActive('/zakat')} />
-                        <MobileNavLink to="/muslimah" icon={<Moon size={22} />} label="Wanita" active={isActive('/muslimah')} />
+                        <MobileNavLink to="/ramadan" icon={<MoonStar size={22} />} label="Ramadan" active={isActive('/ramadan')} />
+                        <MobileNavLink to="/zakat" icon={<Coins size={22} />} label="Zakat" active={isActive('/zakat')} />
+                        <MobileNavLink to="/muslimah" icon={<Heart size={22} />} label="Muslimah" active={isActive('/muslimah')} />
                     </nav>
                 </div>
             </div>
