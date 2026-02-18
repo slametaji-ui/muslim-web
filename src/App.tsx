@@ -10,6 +10,10 @@ import ThemeDetailPage from './pages/ThemeDetailPage';
 import QiblaPage from './pages/QiblaPage';
 import TasbihPage from './pages/TasbihPage';
 
+import RamadanPage from './pages/RamadanPage';
+import ZakatCalculatorPage from './pages/ZakatCalculatorPage';
+import WomenHealthPage from './pages/WomenHealthPage';
+
 function App() {
     return (
         <Router>
@@ -23,6 +27,9 @@ function App() {
                     <Route path="/qibla" element={<QiblaPage />} />
                     <Route path="/tasbih" element={<TasbihPage />} />
                     <Route path="/calendar" element={<CalendarPage />} />
+                    <Route path="/ramadan" element={<RamadanPage />} />
+                    <Route path="/zakat" element={<ZakatCalculatorPage />} />
+                    <Route path="/muslimah" element={<WomenHealthPage />} />
                 </Routes>
             </Layout>
         </Router>

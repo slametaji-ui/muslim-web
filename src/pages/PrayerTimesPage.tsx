@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Search, MapPin, Loader2, Calendar as CalendarIcon, Navigation, ChevronDown, Sunrise, Sun, Sunset, Moon, CloudSun, CloudMoon, Coffee, Volume2, RotateCw, Clock, CheckSquare, Square, Circle, BookOpen, Compass } from 'lucide-react';
 import { format, isSameDay, startOfWeek, endOfWeek, isWithinInterval, parse } from 'date-fns';
 import { id } from 'date-fns/locale';
+import PageHeader from '../components/PageHeader';
 
 interface MonthlySchedule {
     tanggal: string;
@@ -41,6 +42,10 @@ const PrayerTimesPage: React.FC = () => {
     const [hijriDate, setHijriDate] = useState<HijriDateInfo | null>(null);
     const [notifiedPrayer, setNotifiedPrayer] = useState<string | null>(null);
     const [showAdzanModal, setShowAdzanModal] = useState(false);
+    const [userName, setUserName] = useState(() => localStorage.getItem('muslim_app_user_name') || '');
+    const [isAdzanEnabled, setIsAdzanEnabled] = useState(() => localStorage.getItem('muslim_app_adzan_enabled') === 'true');
+    const [showNameInput, setShowNameInput] = useState(!localStorage.getItem('muslim_app_user_name'));
+    
     const [prayerStatus, setPrayerStatus] = useState<Record<string, boolean>>(() => {
         const saved = localStorage.getItem('muslim_app_prayer_status');
         if (saved) {
@@ -75,6 +80,16 @@ const PrayerTimesPage: React.FC = () => {
             return next;
         });
     };
+
+    const handleSaveName = (name: string) => {
+        setUserName(name);
+        localStorage.setItem('muslim_app_user_name', name);
+        setShowNameInput(false);
+    };
+
+    useEffect(() => {
+        localStorage.setItem('muslim_app_adzan_enabled', String(isAdzanEnabled));
+    }, [isAdzanEnabled]);
 
     const getTimeGreeting = () => {
         const hour = currentTime.getHours();
@@ -140,23 +155,26 @@ const PrayerTimesPage: React.FC = () => {
                 // Trigger Notification & Audio
                 if (foundActive && foundActive !== notifiedPrayer) {
                     setNotifiedPrayer(foundActive);
-                    setShowAdzanModal(true);
+                    
+                    if (isAdzanEnabled) {
+                        setShowAdzanModal(true);
 
-                    try {
-                        if ('Notification' in window && Notification.permission === 'granted') {
-                            new Notification(`Waktu ${foundActive} Telah Tiba!`, {
-                                body: `Saatnya menunaikan sholat ${foundActive} untuk wilayah ${city?.lokasi || 'Anda'}.`,
-                                icon: '/pwa-192x192.png' // Ensure this exists or use default
-                            });
+                        try {
+                            if ('Notification' in window && Notification.permission === 'granted') {
+                                new Notification(`Waktu ${foundActive} Telah Tiba!`, {
+                                    body: `Saatnya menunaikan sholat ${foundActive} untuk wilayah ${city?.lokasi || 'Anda'}.`,
+                                    icon: '/pwa-192x192.png'
+                                });
+                            }
+                        } catch (error) {
+                            console.error("Notification failed:", error);
                         }
-                    } catch (error) {
-                        console.error("Notification failed:", error);
-                    }
 
-                    // Play Adzan
-                    if (adzanAudioRef.current) {
-                        adzanAudioRef.current.currentTime = 0;
-                        adzanAudioRef.current.play().catch(e => console.log("Audio play failed (user interaction needed first):", e));
+                        // Play Adzan
+                        if (adzanAudioRef.current) {
+                            adzanAudioRef.current.currentTime = 0;
+                            adzanAudioRef.current.play().catch(e => console.log("Audio play failed (user interaction needed first):", e));
+                        }
                     }
                 } else if (!foundActive) {
                     setNotifiedPrayer(null); // Reset when prayer time is over
@@ -334,9 +352,50 @@ const PrayerTimesPage: React.FC = () => {
     const displayedSchedule = activeTab === 'week' ? getCurrentWeekSchedule() : monthlySchedule;
 
     return (
-        <div className="bg-white dark:bg-slate-900 min-h-screen pb-24 transition-colors">
+        <div className="bg-white dark:bg-slate-950 min-h-screen pb-24 transition-colors">
+            <PageHeader 
+                title="" 
+                rightElement={
+                    <button 
+                        onClick={() => setIsAdzanEnabled(!isAdzanEnabled)}
+                        className={`p-2 rounded-xl transition-all flex items-center gap-2 ${isAdzanEnabled ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-slate-50 text-slate-400 dark:bg-slate-800'}`}
+                    >
+                        <Volume2 size={18} />
+                        <span className="text-[10px] font-black uppercase tracking-widest">{isAdzanEnabled ? 'ON' : 'OFF'}</span>
+                    </button>
+                }
+            />
+
+            {/* Name Input Modal */}
+            {showNameInput && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 w-full max-w-sm shadow-2xl border border-white/20 dark:border-slate-800">
+                        <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-2">Ahlan wa Sahlan</h2>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">Boleh kami tahu nama Anda untuk sapaan di aplikasi?</p>
+                        <input 
+                            type="text"
+                            placeholder="Masukkan nama Anda..."
+                            className="w-full px-5 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 mb-6 focus:ring-2 focus:ring-emerald-500 outline-none text-slate-800 dark:text-white font-bold"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleSaveName((e.target as HTMLInputElement).value);
+                            }}
+                            autoFocus
+                        />
+                        <button 
+                            onClick={() => {
+                                const val = (document.querySelector('input[placeholder="Masukkan nama Anda..."]') as HTMLInputElement).value;
+                                if (val) handleSaveName(val);
+                            }}
+                            className="w-full bg-emerald-600 text-white font-black py-4 rounded-2xl shadow-lg shadow-emerald-200 dark:shadow-none active:scale-95 transition-all"
+                        >
+                            Simpan & Lanjutkan
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Search & Header Controls */}
-            <div className="max-w-md mx-auto px-4 pt-6 flex gap-2 relative z-50">
+            <div className="max-w-md mx-auto px-4 pt-6 flex gap-2 relative z-30">
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <input
@@ -370,13 +429,6 @@ const PrayerTimesPage: React.FC = () => {
                 >
                     {locating ? <Loader2 className="animate-spin" size={20} /> : <Navigation size={20} />}
                 </button>
-                <button
-                    onClick={handleManualRefresh}
-                    disabled={loading}
-                    className="bg-slate-50 dark:bg-slate-800/50 text-slate-400 dark:text-slate-500 p-3 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all border border-slate-100 dark:border-slate-800"
-                >
-                    <RotateCw size={20} className={loading ? 'animate-spin' : ''} />
-                </button>
             </div>
 
             {loading ? (
@@ -395,9 +447,21 @@ const PrayerTimesPage: React.FC = () => {
                             <h2 className="text-slate-400 dark:text-slate-500 font-bold text-[10px] uppercase tracking-[0.2em] mb-1">
                                 {getTimeGreeting()}
                             </h2>
-                            <h1 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight leading-none">
-                                Assalamu'alaikum
-                            </h1>
+                            <div className="flex items-center gap-3">
+                                <h1 className="text-xl font-black text-slate-800 dark:text-white tracking-tight leading-none">
+                                    Assalamu'alaikum<span className="text-emerald-500">,</span><br />
+                                    {userName || 'Akhi/Ukhti'}
+                                </h1>
+                                {!window.matchMedia('(display-mode: standalone)').matches && (
+                                    <button 
+                                        onClick={() => window.dispatchEvent(new Event('beforeinstallprompt'))}
+                                        className="p-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl"
+                                        title="Pasang Aplikasi"
+                                    >
+                                        <Download size={16} />
+                                    </button>
+                                )}
+                            </div>
                         </div>
                         <div className="text-right">
                             <div className="bg-emerald-50 dark:bg-emerald-900/20 px-4 py-2 rounded-2xl border border-emerald-100 dark:border-emerald-800/50 shadow-sm">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, X, Smartphone, CheckCircle2 } from 'lucide-react';
+import { Download, X, Smartphone, CheckCircle2, Star, Sparkles } from 'lucide-react';
 
 const InstallPWA: React.FC = () => {
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -13,11 +13,8 @@ const InstallPWA: React.FC = () => {
         }
 
         const handler = (e: any) => {
-            // Prevent Chrome 67 and earlier from automatically showing the prompt
             e.preventDefault();
-            // Stash the event so it can be triggered later.
             setDeferredPrompt(e);
-            // Update UI notify the user they can add to home screen
             setShowPrompt(true);
         };
 
@@ -27,7 +24,6 @@ const InstallPWA: React.FC = () => {
             setShowPrompt(false);
             setDeferredPrompt(null);
             setIsInstalled(true);
-            console.log('PWA was installed');
         });
 
         return () => window.removeEventListener('beforeinstallprompt', handler);
@@ -35,15 +31,8 @@ const InstallPWA: React.FC = () => {
 
     const handleInstallClick = async () => {
         if (!deferredPrompt) return;
-        
-        // Show the prompt
         deferredPrompt.prompt();
-        
-        // Wait for the user to respond to the prompt
         const { outcome } = await deferredPrompt.userChoice;
-        console.log(`User response to the install prompt: ${outcome}`);
-        
-        // We've used the prompt, and can't use it again, throw it away
         setDeferredPrompt(null);
         setShowPrompt(false);
     };
@@ -51,36 +40,55 @@ const InstallPWA: React.FC = () => {
     if (isInstalled || !showPrompt) return null;
 
     return (
-        <div className="fixed bottom-24 left-4 right-4 md:left-auto md:right-8 md:bottom-8 z-[100] animate-in slide-in-from-bottom-10 fade-in duration-700">
-            <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-none border border-slate-100 dark:border-slate-700 relative overflow-hidden group max-w-sm">
-                {/* Background Pattern */}
-                <div className="absolute top-0 right-0 p-4 opacity-[0.03] pointer-events-none rotate-12 group-hover:rotate-0 transition-transform duration-1000">
-                    <Smartphone size={100} />
-                </div>
+        <div className="fixed inset-0 z-[100] flex items-end justify-center px-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-500">
+            <div 
+                className="w-full max-w-md bg-white dark:bg-slate-900 rounded-t-[3rem] p-8 shadow-2xl relative overflow-hidden animate-in slide-in-from-bottom duration-700 pointer-events-auto"
+                style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
+            >
+                {/* Decorative Elements */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-teal-500/10 rounded-full blur-2xl -ml-12 -mb-12"></div>
+                
+                <div className="w-12 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full mx-auto mb-8"></div>
 
-                <button 
-                    onClick={() => setShowPrompt(false)}
-                    className="absolute top-4 right-4 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 transition-colors"
-                >
-                    <X size={18} />
-                </button>
-
-                <div className="flex items-start gap-4">
-                    <div className="w-14 h-14 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0 shadow-inner">
-                        <Download size={28} />
+                <div className="flex flex-col items-center text-center">
+                    <div className="relative mb-6">
+                        <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-teal-700 rounded-[2rem] flex items-center justify-center text-white shadow-xl shadow-emerald-200 dark:shadow-none animate-bounce duration-[2000ms]">
+                            <Download size={36} />
+                        </div>
+                        <div className="absolute -top-2 -right-2 bg-yellow-400 text-slate-900 p-1.5 rounded-full shadow-lg border-2 border-white dark:border-slate-900">
+                            <Star size={14} fill="currentColor" />
+                        </div>
+                        <div className="absolute -bottom-2 -left-2 bg-white dark:bg-slate-800 p-1.5 rounded-full shadow-lg border-2 border-emerald-500">
+                            <Sparkles size={14} className="text-emerald-500" />
+                        </div>
                     </div>
-                    <div className="flex-1">
-                        <h3 className="text-slate-800 dark:text-white font-black text-base leading-tight mb-1">Pasang Muslim App</h3>
-                        <p className="text-slate-500 dark:text-slate-400 text-xs font-medium leading-relaxed mb-4">
-                            Akses lebih cepat & lancar langsung dari layar utama HP Anda.
-                        </p>
+
+                    <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-2 tracking-tight">Pasang Aplikasi Muslim</h2>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm font-medium leading-relaxed mb-8 max-w-[280px]">
+                        Nikmati pengalaman ibadah yang lebih lancar, cepat, dan tanpa gangguan browser.
+                    </p>
+
+                    <div className="w-full grid gap-3">
                         <button 
                             onClick={handleInstallClick}
-                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-widest py-3 px-6 rounded-xl transition-all shadow-lg shadow-emerald-200 dark:shadow-none flex items-center justify-center gap-2 group/btn"
+                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-2xl shadow-xl shadow-emerald-100 dark:shadow-none transition-all active:scale-[0.98] flex items-center justify-center gap-3 group"
                         >
-                            Pasang Sekarang
-                            <CheckCircle2 size={16} className="group-hover:translate-x-1 transition-transform" />
+                            <span>Pasang Sekarang</span>
+                            <CheckCircle2 size={18} className="group-hover:translate-x-1 transition-transform" />
                         </button>
+                        
+                        <button 
+                            onClick={() => setShowPrompt(false)}
+                            className="w-full bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-bold py-4 rounded-2xl transition-all active:scale-[0.98] uppercase text-[10px] tracking-[0.2em]"
+                        >
+                            Nanti Saja
+                        </button>
+                    </div>
+                    
+                    <div className="mt-8 flex items-center gap-2 opacity-30 select-none">
+                        <Smartphone size={14} />
+                        <span className="text-[10px] font-black uppercase tracking-widest">Web App for Mobile</span>
                     </div>
                 </div>
             </div>

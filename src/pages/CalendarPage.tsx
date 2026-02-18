@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import PageHeader from '../components/PageHeader';
 import {
     format,
     addMonths,
@@ -135,7 +136,10 @@ const CalendarPage: React.FC = () => {
     };
 
     return (
-        <div className="max-w-md mx-auto w-full pb-10">
+        <div className="bg-white dark:bg-slate-950 min-h-screen pb-24 transition-colors">
+            <PageHeader title="Kalender Hijri" />
+            
+            <div className="max-w-md mx-auto w-full px-6 pt-8">
             {/* Header / Hijri Detail Card */}
             <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-3xl p-6 text-white shadow-lg shadow-emerald-100 mb-6 relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-10 rotate-12 pointer-events-none">
@@ -179,6 +183,7 @@ const CalendarPage: React.FC = () => {
                 Tanggal Hijriah dapat berbeda +/- 1 hari sesuai metode penetapan.
             </div>
         </div>
+    </div>
     );
 };
 

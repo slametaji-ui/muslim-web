@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Compass, Navigation, MapPin } from 'lucide-react';
+import PageHeader from '../components/PageHeader';
 
 const QiblaPage: React.FC = () => {
     const [heading, setHeading] = useState<number | null>(null);
@@ -50,7 +51,6 @@ const QiblaPage: React.FC = () => {
             compass = (event as any).webkitCompassHeading;
         } else if (event.alpha !== null) {
             // Android (alpha is 0 at north usually, but can vary by device context)
-            // Simplified handling for now
             compass = 360 - event.alpha; 
         }
 
@@ -59,7 +59,6 @@ const QiblaPage: React.FC = () => {
         }
     };
 
-    // Calculate Qibla direction from current location
     const calculateQibla = (lat: number, lng: number) => {
         const KAABA_LAT = 21.422487;
         const KAABA_LNG = 39.826206;
@@ -76,70 +75,80 @@ const QiblaPage: React.FC = () => {
         return (qibla + 360) % 360;
     };
 
-    // Helper to rotate compass
-    // If heading is 0 (North), and Qibla is 295. 
-    // We rotate the compass card by -heading using CSS transform.
-    // The Qibla marker should be at 295 degrees on the card.
-
     return (
-        <div className="max-w-md mx-auto w-full pb-20 px-4 pt-6 text-center">
-            <h1 className="text-2xl font-bold text-slate-800 mb-2">Arah Kiblat</h1>
-            <p className="text-slate-500 text-sm mb-8">
-                {location ? "Arah Kiblat disesuaikan dengan lokasi Anda." : "Menampilkan arah kiblat umum (Jakarta)."}
-            </p>
-
-            <div className="relative w-72 h-72 mx-auto mb-8">
-                 {/* Compass Body */}
-                <div 
-                    className="w-full h-full rounded-full border-4 border-slate-200 bg-white shadow-xl relative transition-transform duration-200 ease-out"
-                    style={{ transform: `rotate(-${heading || 0}deg)` }}
-                >
-                     {/* Cardinal Points */}
-                     <div className="absolute top-2 left-1/2 -translate-x-1/2 font-bold text-slate-400">N</div>
-                     <div className="absolute bottom-2 left-1/2 -translate-x-1/2 font-bold text-slate-400">S</div>
-                     <div className="absolute left-2 top-1/2 -translate-y-1/2 font-bold text-slate-400">W</div>
-                     <div className="absolute right-2 top-1/2 -translate-y-1/2 font-bold text-slate-400">E</div>
-
-                     {/* Qibla Indicator */}
-                     <div 
-                        className="absolute top-1/2 left-1/2 w-1 h-32 origin-bottom -translate-x-1/2"
-                        style={{ transform: `rotate(${qiblaDirection}deg) translateY(-50%)` }}
-                     >
-                         <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                             <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center shadow-md animate-pulse">
-                                 <Navigation className="text-white rotate-45" size={16} />
-                             </div>
-                         </div>
-                         <div className="h-full w-0.5 bg-emerald-500/50 mx-auto"></div>
-                     </div>
-
-                     {/* Center Point */}
-                     <div className="absolute top-1/2 left-1/2 w-4 h-4 bg-slate-800 rounded-full -translate-x-1/2 -translate-y-1/2 z-10 border-2 border-white"></div>
+        <div className="bg-white dark:bg-slate-950 min-h-screen pb-24 transition-colors">
+            <PageHeader title="Arah Kiblat" />
+            
+            <div className="max-w-md mx-auto w-full px-6 pt-8 text-center">
+                <div className="mb-10">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest animate-pulse">
+                        <MapPin size={12} />
+                        {location ? "Lokasi Terdeteksi" : "Lokasi Default"}
+                    </div>
                 </div>
 
-                {/* Fixed Needle (Phone is static, Compass rotates) OR Phone rotates, Compass stays? 
-                    Usually: Compass rotates to match North. 
-                */}
-            </div>
+                <div className="relative w-80 h-80 mx-auto mb-12">
+                     <div className="absolute inset-0 rounded-full border border-slate-100 dark:border-slate-800 scale-110"></div>
+                     <div className="absolute inset-0 rounded-full border border-emerald-500/10 dark:border-emerald-400/5 scale-125 animate-ping"></div>
 
-            {!permissionGranted && (
-                <button 
-                    onClick={requestAccess}
-                    className="bg-emerald-600 text-white px-6 py-3 rounded-full font-medium shadow-lg hover:bg-emerald-700 transition-colors"
-                >
-                    Izinkan Akses Kompas
-                </button>
-            )}
+                    <div 
+                        className="w-full h-full rounded-full bg-gradient-to-b from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-[0_30px_60px_-12px_rgba(0,0,0,0.15)] dark:shadow-none border-8 border-white dark:border-slate-800 relative transition-transform duration-500 ease-out"
+                        style={{ transform: `rotate(-${heading || 0}deg)` }}
+                    >
+                         <div className="absolute top-4 left-1/2 -translate-x-1/2 font-black text-slate-800 dark:text-white text-lg">N</div>
+                         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 font-black text-slate-300 dark:text-slate-600 text-lg">S</div>
+                         <div className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-300 dark:text-slate-600 text-lg">W</div>
+                         <div className="absolute right-4 top-1/2 -translate-y-1/2 font-black text-slate-300 dark:text-slate-600 text-lg">E</div>
 
-            <div className="mt-8 bg-emerald-50 p-4 rounded-xl text-left border border-emerald-100">
-                <div className="flex items-start gap-3">
-                    <div className="p-2 bg-emerald-100 rounded-full text-emerald-600 mt-1">
-                        <MapPin size={20} />
+                         {[...Array(24)].map((_, i) => (
+                             <div 
+                                key={i}
+                                className="absolute top-0 left-1/2 w-0.5 h-full -translate-x-1/2"
+                                style={{ transform: `rotate(${i * 15}deg)` }}
+                             >
+                                 <div className={`w-full h-3 ${i % 2 === 0 ? 'bg-slate-200 dark:bg-slate-700' : 'bg-slate-100 dark:bg-slate-800 opacity-50'}`}></div>
+                             </div>
+                         ))}
+
+                         <div 
+                            className="absolute inset-0 transition-transform duration-1000 ease-in-out"
+                            style={{ transform: `rotate(${qiblaDirection}deg)` }}
+                         >
+                             <div className="absolute top-1/2 left-1/2 w-1 h-36 origin-bottom -translate-x-1/2 -translate-y-full">
+                                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                                     <div className="w-12 h-12 bg-white dark:bg-slate-900 rounded-2xl flex items-center justify-center shadow-2xl border-4 border-emerald-500 relative overflow-hidden group">
+                                         <div className="absolute inset-0 bg-emerald-500/10 group-hover:bg-emerald-500/20 transition-colors"></div>
+                                         <Navigation className="text-emerald-500 rotate-45" size={24} fill="currentColor" />
+                                     </div>
+                                     <div className="mt-2 text-[10px] font-black text-emerald-600 uppercase tracking-widest whitespace-nowrap">KABAH</div>
+                                 </div>
+                                 <div className="h-full w-1 bg-gradient-to-t from-transparent via-emerald-500/50 to-emerald-500 mx-auto rounded-full"></div>
+                             </div>
+                         </div>
+
+                         <div className="absolute top-1/2 left-1/2 w-10 h-10 bg-white dark:bg-slate-800 rounded-full -translate-x-1/2 -translate-y-1/2 z-20 shadow-xl border-4 border-slate-100 dark:border-slate-700 flex items-center justify-center">
+                             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                         </div>
+                    </div>
+                </div>
+
+                {!permissionGranted && (
+                    <button 
+                        onClick={requestAccess}
+                        className="bg-emerald-600 text-white px-8 py-4 rounded-3xl font-black text-sm uppercase tracking-widest shadow-xl shadow-emerald-200 dark:shadow-none hover:bg-emerald-700 active:scale-95 transition-all mb-8"
+                    >
+                        Aktifkan Kompas
+                    </button>
+                )}
+
+                <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-[2rem] text-left border border-slate-100 dark:border-slate-800 flex items-start gap-4 shadow-sm">
+                    <div className="p-3 bg-white dark:bg-slate-800 rounded-2xl text-emerald-600 shadow-sm border border-slate-100 dark:border-slate-700">
+                        <Compass size={24} />
                     </div>
                     <div>
-                        <h3 className="font-bold text-emerald-900 text-sm mb-1">Tips Akurasi</h3>
-                        <p className="text-emerald-700 text-sm opacity-90 leading-relaxed">
-                            Pastikan GPS aktif dan lakukan kalibrasi kompas dengan gerakan angka 8 jika arah tidak sesuai. Jauhkan dari benda magnetik.
+                        <h3 className="font-black text-slate-800 dark:text-white text-sm mb-1 uppercase tracking-tight">Petunjuk Kalibrasi</h3>
+                        <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed">
+                            Pegang HP secara horizontal (mendatar). Jika arah tidak stabil, gerakkan HP membentuk angka 8 di udara untuk kalibrasi ulang sensor.
                         </p>
                     </div>
                 </div>
