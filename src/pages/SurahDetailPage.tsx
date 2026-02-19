@@ -65,8 +65,8 @@ const SurahDetailPage: React.FC = () => {
     if (loading) {
         return (
             <div className="flex flex-col justify-center items-center min-h-screen pb-20">
-                <Loader2 className="animate-spin text-emerald-600" size={40} />
-                <p className="text-slate-400 text-sm mt-4">Memuat Ayat...</p>
+                <Loader2 className="animate-spin text-primary-600" size={40} />
+                <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest mt-4">Memuat Ayat...</p>
             </div>
         );
     }
@@ -74,8 +74,8 @@ const SurahDetailPage: React.FC = () => {
     if (!surah) {
         return (
             <div className="flex flex-col justify-center items-center min-h-screen pb-20 text-center px-4">
-                <h2 className="text-xl font-bold text-slate-800">Gagal memuat data</h2>
-                <Link to="/quran" className="mt-4 text-emerald-600 font-medium hover:underline">Kembali ke Daftar Surah</Link>
+                <h2 className="text-xl font-black text-slate-800 tracking-tight">Gagal memuat data</h2>
+                <Link to="/quran" className="mt-4 text-primary-600 font-bold hover:underline uppercase text-[10px] tracking-widest">Kembali ke Daftar Surah</Link>
             </div>
         );
     }
@@ -96,32 +96,35 @@ const SurahDetailPage: React.FC = () => {
                 </button>
             </div>
 
-            {/* Surah Banner */}
-            <div className="mx-4 mb-8 bg-gradient-to-br from-emerald-600 to-teal-800 rounded-3xl p-8 text-center text-white shadow-xl shadow-emerald-100 relative overflow-hidden">
+            {/* Surah Banner - Theme Updated to Green & Orange */}
+            <div className="mx-4 mb-8 bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-600 rounded-[2.5rem] p-8 text-center text-white shadow-2xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-4 opacity-5 rotate-12 group-hover:scale-110 transition-transform duration-700">
+                    <BookOpen size={160} />
+                </div>
                 <div className="relative z-10">
-                    <h2 className="font-serif text-4xl mb-2">{surah.name_short}</h2>
-                    <p className="text-emerald-100 text-sm mb-6">{surah.revelation_id} • {surah.number_of_verses} Ayat</p>
+                    <h2 className="font-serif text-5xl mb-3 drop-shadow-sm">{surah.name_short}</h2>
+                    <p className="text-primary-50 text-[10px] font-black uppercase tracking-[0.2em] mb-8">{surah.revelation_id} • {surah.number_of_verses} Ayat</p>
 
                     {/* Bismillah */}
                     {surah.number !== 1 && surah.number !== 9 && (
-                        <div className="font-serif text-2xl mt-4 mb-2 opacity-90">
+                        <div className="font-serif text-3xl mt-4 mb-8 opacity-90 drop-shadow-sm">
                             بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم
                         </div>
                     )}
 
-                    <div className="mt-6 flex justify-center gap-4">
+                    <div className="mt-8 flex justify-center gap-3">
                         <button
                             onClick={() => toggleAudio(surah.audio_url)}
-                            className="bg-white text-emerald-700 px-6 py-2 rounded-full font-medium flex items-center gap-2 hover:bg-emerald-50 transition-colors shadow-lg"
+                            className="bg-white text-primary-700 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-primary-50 active:scale-95 transition-all shadow-xl"
                         >
-                            {isPlaying && currentVerseAudio === null ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
+                            {isPlaying && currentVerseAudio === null ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
                             Putar Murottal
                         </button>
                         <button
                             onClick={() => setShowTafsir(!showTafsir)}
-                            className="bg-white/20 backdrop-blur-sm text-white border border-white/40 px-6 py-2 rounded-full font-medium flex items-center gap-2 hover:bg-white/30 transition-colors"
+                            className="bg-white/10 backdrop-blur-md text-white border border-white/20 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-white/20 active:scale-95 transition-all"
                         >
-                            <Info size={18} />
+                            <Info size={16} />
                             {showTafsir ? 'Tutup Tafsir' : 'Baca Tafsir'}
                         </button>
                     </div>
@@ -145,14 +148,14 @@ const SurahDetailPage: React.FC = () => {
                 {surah.verses?.map((verse) => (
                     <div key={verse.id} className="border-b border-slate-100 pb-6 last:border-0" id={`ayah-${verse.ayah}`}>
                         {/* Actions Row */}
-                        <div className="flex justify-between items-center mb-6 bg-slate-50 rounded-lg p-2">
-                            <div className="w-8 h-8 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center font-bold text-sm">
+                        <div className="flex justify-between items-center mb-6 bg-slate-50 dark:bg-slate-900 rounded-2xl p-3 border border-slate-100 dark:border-slate-800 shadow-sm">
+                            <div className="w-10 h-10 bg-primary-50 text-secondary-600 rounded-xl flex items-center justify-center font-black text-xs shadow-inner">
                                 {verse.ayah}
                             </div>
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => toggleAudio(verse.audio, Number(verse.ayah))}
-                                    className={`p-2 rounded-full transition-colors ${isPlaying && currentVerseAudio === Number(verse.ayah) ? 'text-emerald-600 bg-emerald-100' : 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50'}`}
+                                    className={`p-2.5 rounded-xl transition-all ${isPlaying && currentVerseAudio === Number(verse.ayah) ? 'text-white bg-secondary-500 shadow-lg shadow-secondary-200' : 'text-slate-400 hover:text-primary-600 hover:bg-primary-50'}`}
                                 >
                                     {isPlaying && currentVerseAudio === Number(verse.ayah) ? <Pause size={18} /> : <Play size={18} />}
                                 </button>
@@ -171,7 +174,7 @@ const SurahDetailPage: React.FC = () => {
 
                         {/* Transliteration & Meanings */}
                         <div className="space-y-2">
-                            <p className="text-emerald-600 font-medium text-sm leading-relaxed">
+                            <p className="text-secondary-600 font-bold text-sm leading-relaxed tracking-tight group-hover:text-primary-600 transition-colors">
                                 {verse.latin}
                             </p>
                             <p className="text-slate-600 text-sm leading-relaxed">

@@ -1,24 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { api, City, PrayerTimes } from '../services/api';
-import { Link } from 'react-router-dom';
-import { Search, MapPin, Loader2, Calendar as CalendarIcon, Navigation, ChevronDown, Sunrise, Sun, Sunset, Moon, CloudSun, CloudMoon, Coffee, Volume2, RotateCw, Clock, CheckSquare, Square, Circle, BookOpen, Compass, Download } from 'lucide-react';
-import { format, isSameDay, startOfWeek, endOfWeek, isWithinInterval, parse } from 'date-fns';
+import { Link, useNavigate } from 'react-router-dom';
+import { Search, MapPin, Loader2, Navigation, Sunrise, Sun, Moon, Volume2, RotateCw, Clock, CheckSquare, Circle, BookOpen, Library, Fingerprint, Sparkles, Download, User, Monitor, Layout as LayoutIcon, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { format, isSameDay } from 'date-fns';
 import { id } from 'date-fns/locale';
-import PageHeader from '../components/PageHeader';
-
-interface MonthlySchedule {
-    tanggal: string;
-    imsak: string;
-    subuh: string;
-    terbit: string;
-    dhuha: string;
-    dzuhur: string;
-    dzuhur_time?: string;
-    ashar: string;
-    maghrib: string;
-    isya: string;
-    date: string;
-}
 
 interface HijriDateInfo {
     day: string;
@@ -27,15 +12,10 @@ interface HijriDateInfo {
 }
 
 const PrayerTimesPage: React.FC = () => {
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [city, setCity] = useState<City | null>(null);
     const [schedule, setSchedule] = useState<PrayerTimes | null>(null);
-    const [monthlySchedule, setMonthlySchedule] = useState<MonthlySchedule[]>([]);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [searchResults, setSearchResults] = useState<City[]>([]);
-    const [showDropdown, setShowDropdown] = useState(false);
-    const [activeTab, setActiveTab] = useState<'week' | 'month'>('week');
-    const [locating, setLocating] = useState(false);
     const [currentTime, setCurrentTime] = useState(new Date());
     const [activePrayer, setActivePrayer] = useState<string | null>(null);
     const [countdown, setCountdown] = useState<string>('');
@@ -45,13 +25,19 @@ const PrayerTimesPage: React.FC = () => {
     const [userName, setUserName] = useState(() => localStorage.getItem('muslim_app_user_name') || '');
     const [isAdzanEnabled, setIsAdzanEnabled] = useState(() => localStorage.getItem('muslim_app_adzan_enabled') === 'true');
     const [showNameInput, setShowNameInput] = useState(!localStorage.getItem('muslim_app_user_name'));
+    const [showProfileModal, setShowProfileModal] = useState(false);
+    const [hijriOffset, setHijriOffset] = useState(() => Number(localStorage.getItem('muslim_app_hijri_offset')) || 0);
+    const [madhab, setMadhab] = useState(() => localStorage.getItem('muslim_app_madhab') || 'shafi');
+    const [theme, setTheme] = useState(() => (localStorage.getItem('theme') || 'light') as 'light' | 'dark');
+    const [locating, setLocating] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState<City[]>([]);
     
     const [prayerStatus, setPrayerStatus] = useState<Record<string, boolean>>(() => {
         const saved = localStorage.getItem('muslim_app_prayer_status');
         if (saved) {
             try {
                 const parsed = JSON.parse(saved);
-                // Only keep today's status
                 const today = format(new Date(), 'yyyy-MM-dd');
                 if (parsed.date === today) return parsed.status;
             } catch (e) { return {}; }
@@ -59,15 +45,165 @@ const PrayerTimesPage: React.FC = () => {
         return {};
     });
 
-    // Adzan Audio Source (Using a reliable external source or placeholder)
     const adzanAudioRef = React.useRef<HTMLAudioElement | null>(null);
 
-    const handleStopAdzan = () => {
-        if (adzanAudioRef.current) {
-            adzanAudioRef.current.pause();
-            adzanAudioRef.current.currentTime = 0;
+    const calculationOptions = {
+        madhab: madhab === 'hanafi' ? 2 : 1,
+        hijriOffset: hijriOffset
+    };
+
+    useEffect(() => {
+        adzanAudioRef.current = new Audio('https://www.islamcan.com/audio/adhan/azan1.mp3');
+        return () => {
+            if (adzanAudioRef.current) {
+                adzanAudioRef.current.pause();
+                adzanAudioRef.current = null;
+            }
+        };
+    }, []);
+
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    useEffect(() => {
+        if (schedule) {
+            const times = [
+                { name: 'Subuh', time: schedule.jadwal.subuh },
+                { name: 'Dzuhur', time: schedule.jadwal.dzuhur },
+                { name: 'Ashar', time: schedule.jadwal.ashar },
+                { name: 'Maghrib', time: schedule.jadwal.maghrib },
+                { name: 'Isya', time: schedule.jadwal.isya },
+            ];
+
+            const now = currentTime;
+            let foundActive = null;
+            for (const t of times) {
+                const [h, m] = t.time.split(':').map(Number);
+                const pStart = new Date();
+                pStart.setHours(h, m, 0);
+                const pEnd = new Date(pStart);
+                pEnd.setMinutes(pStart.getMinutes() + 20);
+
+                if (now >= pStart && now <= pEnd) {
+                    foundActive = t.name;
+                    break;
+                }
+            }
+            setActivePrayer(foundActive);
+
+            if (foundActive && foundActive !== notifiedPrayer) {
+                setNotifiedPrayer(foundActive);
+                if (isAdzanEnabled) {
+                    setShowAdzanModal(true);
+                    if (adzanAudioRef.current) {
+                        adzanAudioRef.current.currentTime = 0;
+                        adzanAudioRef.current.play().catch(e => console.log("Audio play failed:", e));
+                    }
+                }
+            } else if (!foundActive) {
+                setNotifiedPrayer(null);
+            }
+
+            const next = getNextPrayer(schedule);
+            if (next) {
+                const [h, m] = next.time.split(':').map(Number);
+                const target = new Date();
+                target.setHours(h, m, 0);
+                if (target < now) target.setDate(target.getDate() + 1);
+
+                const diff = target.getTime() - now.getTime();
+                if (diff > 0) {
+                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    setCountdown(`${hours}j ${minutes}m`);
+                }
+            }
         }
-        setShowAdzanModal(false);
+    }, [currentTime, schedule, isAdzanEnabled, notifiedPrayer]);
+
+    useEffect(() => {
+        const cachedCity = api.getLastCity();
+        if (cachedCity) {
+            setCity(cachedCity);
+            loadData(cachedCity.id);
+        } else {
+            handleGeolocation();
+        }
+    }, [madhab]);
+
+    const handleGeolocation = () => {
+        setLocating(true);
+        setLoading(true);
+        if ('geolocation' in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const { latitude, longitude } = position.coords;
+                    try {
+                        const detectedCity = await api.getCityByLocation(latitude, longitude);
+                        if (detectedCity) {
+                            setCity(detectedCity);
+                            api.saveLastCity(detectedCity);
+                            loadData(detectedCity.id);
+                        } else {
+                            loadDefaultCity();
+                        }
+                    } catch (error) {
+                        loadDefaultCity();
+                    } finally {
+                        setLocating(false);
+                    }
+                },
+                () => {
+                    loadDefaultCity();
+                    setLocating(false);
+                },
+                { timeout: 8000 }
+            );
+        } else {
+            loadDefaultCity();
+            setLocating(false);
+        }
+    };
+
+    const loadDefaultCity = async () => {
+        const jakarta: City = { id: '1301', lokasi: 'DKI JAKARTA' };
+        setCity(jakarta);
+        loadData('1301');
+    };
+
+    const loadData = async (cityId: string, forceRefresh = false) => {
+        setLoading(true);
+        try {
+            const today = new Date();
+            const dailyData = await api.getPrayerTimes(cityId, today, forceRefresh);
+            
+            if (dailyData?.koordinat) {
+                const localOverride = api.getLocalPrayerTimes(
+                    dailyData.koordinat.lat, 
+                    dailyData.koordinat.lon, 
+                    today,
+                    calculationOptions
+                );
+                setSchedule(localOverride);
+            } else {
+                setSchedule(dailyData);
+            }
+
+            const hijri = await api.getHijriDate(today);
+            if (hijri) setHijriDate(hijri);
+        } catch (error) {
+            console.error('Data load error', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const changeTheme = (newTheme: 'light' | 'dark') => {
+        setTheme(newTheme);
+        localStorage.setItem('theme', newTheme);
+        window.dispatchEvent(new Event('theme-set'));
     };
 
     const togglePrayerStatus = (prayerName: string) => {
@@ -87,216 +223,9 @@ const PrayerTimesPage: React.FC = () => {
         setShowNameInput(false);
     };
 
-    useEffect(() => {
-        localStorage.setItem('muslim_app_adzan_enabled', String(isAdzanEnabled));
-    }, [isAdzanEnabled]);
-
-    const getTimeGreeting = () => {
-        const hour = currentTime.getHours();
-        if (hour >= 5 && hour < 11) return "Selamat Pagi";
-        if (hour >= 11 && hour < 15) return "Selamat Siang";
-        if (hour >= 15 && hour < 18) return "Selamat Sore";
-        return "Selamat Malam";
-    };
-
-    useEffect(() => {
-        adzanAudioRef.current = new Audio('https://www.islamcan.com/audio/adhan/azan1.mp3');
-        return () => {
-            if (adzanAudioRef.current) {
-                adzanAudioRef.current.pause();
-                adzanAudioRef.current = null;
-            }
-        };
-    }, []);
-
-    useEffect(() => {
-        // Request Notification Permission
-        if ('Notification' in window && Notification.permission !== 'granted') {
-            Notification.requestPermission();
-        }
-    }, []);
-
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrentTime(new Date());
-        }, 1000);
-        return () => clearInterval(timer);
-    }, []);
-
-    useEffect(() => {
-        if (schedule) {
-            const checkPrayerStatus = () => {
-                const now = new Date();
-                const times = [
-                    { name: 'Subuh', time: schedule.jadwal.subuh },
-                    { name: 'Dzuhur', time: schedule.jadwal.dzuhur },
-                    { name: 'Ashar', time: schedule.jadwal.ashar },
-                    { name: 'Maghrib', time: schedule.jadwal.maghrib },
-                    { name: 'Isya', time: schedule.jadwal.isya },
-                ];
-
-                // Check if currently inside a prayer window (e.g., 15 mins after azan)
-                let foundActive = null;
-                for (const t of times) {
-                    const [h, m] = t.time.split(':').map(Number);
-                    const pStart = new Date();
-                    pStart.setHours(h, m, 0);
-                    const pEnd = new Date(pStart);
-                    pEnd.setMinutes(pStart.getMinutes() + 20); // 20 mins active window
-
-                    if (now >= pStart && now <= pEnd) {
-                        foundActive = t.name;
-                        break;
-                    }
-
-                }
-                setActivePrayer(foundActive);
-
-                // Trigger Notification & Audio
-                if (foundActive && foundActive !== notifiedPrayer) {
-                    setNotifiedPrayer(foundActive);
-                    
-                    if (isAdzanEnabled) {
-                        setShowAdzanModal(true);
-
-                        try {
-                            if ('Notification' in window && Notification.permission === 'granted') {
-                                new Notification(`Waktu ${foundActive} Telah Tiba!`, {
-                                    body: `Saatnya menunaikan sholat ${foundActive} untuk wilayah ${city?.lokasi || 'Anda'}.`,
-                                    icon: '/pwa-192x192.png'
-                                });
-                            }
-                        } catch (error) {
-                            console.error("Notification failed:", error);
-                        }
-
-                        // Play Adzan
-                        if (adzanAudioRef.current) {
-                            adzanAudioRef.current.currentTime = 0;
-                            adzanAudioRef.current.play().catch(e => console.log("Audio play failed (user interaction needed first):", e));
-                        }
-                    }
-                } else if (!foundActive) {
-                    setNotifiedPrayer(null); // Reset when prayer time is over
-                }
-
-                if (!foundActive) {
-                    const next = getNextPrayer(schedule);
-                    if (next) {
-                        const [h, m] = next.time.split(':').map(Number);
-                        const target = new Date();
-                        target.setHours(h, m, 0);
-                        if (target < now) target.setDate(target.getDate() + 1);
-
-                        const diff = target.getTime() - now.getTime();
-                        if (diff > 0) {
-                            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                            setCountdown(`${hours}h ${minutes}m`);
-                        } else {
-                            setCountdown('Waktu Tiba');
-                        }
-                    }
-                }
-            };
-            checkPrayerStatus();
-        }
-    }, [currentTime, schedule]);
-
-    useEffect(() => {
-        const cachedCity = api.getLastCity();
-        if (cachedCity) {
-            setCity(cachedCity);
-            loadData(cachedCity.id);
-        } else {
-            handleGeolocation();
-        }
-    }, []);
-
-    const handleGeolocation = () => {
-        setLocating(true);
-        setLoading(true);
-        if ('geolocation' in navigator) {
-            navigator.geolocation.getCurrentPosition(
-                async (position) => {
-                    const { latitude, longitude } = position.coords;
-                    try {
-                        const detectedCity = await api.getCityByLocation(latitude, longitude);
-                        if (detectedCity) {
-                            setCity(detectedCity);
-                            loadData(detectedCity.id);
-                        } else {
-                            loadDefaultCity();
-                        }
-                    } catch (error) {
-                        console.error(error);
-                        loadDefaultCity();
-                    } finally {
-                        setLocating(false);
-                    }
-                },
-                (error) => {
-                    console.error('Geolocation error:', error);
-                    loadDefaultCity();
-                    setLocating(false);
-                }
-            );
-        } else {
-            loadDefaultCity();
-            setLocating(false);
-        }
-    };
-
-    const loadDefaultCity = async () => {
-        try {
-            const jakarta: City = { id: '1301', lokasi: 'DKI JAKARTA' };
-            setCity(jakarta);
-            loadData('1301');
-        } catch (error) {
-            console.error('Failed to load default city', error);
-            setLoading(false);
-        }
-    };
-
-    const loadData = async (cityId: string, forceRefresh = false) => {
-        setLoading(true);
-        try {
-            const today = new Date();
-            // Use new API method with cache support
-            const dailyData = await api.getPrayerTimes(cityId, today, forceRefresh);
-            setSchedule(dailyData);
-
-            const hijri = await api.getHijriDate(today);
-            if (hijri) {
-                setHijriDate(hijri);
-            }
-
-            const monthlyData: any = await api.getMonthlyPrayerTimes(cityId, today.getFullYear(), today.getMonth() + 1);
-
-            if (monthlyData && monthlyData.jadwal && Array.isArray(monthlyData.jadwal)) {
-                setMonthlySchedule(monthlyData.jadwal);
-            } else if (monthlyData && monthlyData.jadwal && typeof monthlyData.jadwal === 'object') {
-                setMonthlySchedule([monthlyData.jadwal]);
-            }
-
-        } catch (error) {
-            console.error('Data load error', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleManualRefresh = () => {
-        if (city) {
-            loadData(city.id, true);
-        }
-    };
-
     const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const query = e.target.value;
         setSearchQuery(query);
-        setShowDropdown(true);
-
         if (query.length > 2) {
             const results = await api.searchCity(query);
             setSearchResults(results);
@@ -307,419 +236,265 @@ const PrayerTimesPage: React.FC = () => {
 
     const selectCity = (selectedCity: City) => {
         setCity(selectedCity);
-        setSearchQuery(selectedCity.lokasi);
-        setShowDropdown(false);
+        setSearchQuery('');
+        setSearchResults([]);
         api.saveLastCity(selectedCity);
         loadData(selectedCity.id);
     };
 
+    const getTimeGreeting = () => {
+        const hour = currentTime.getHours();
+        let base = "Selamat Malam";
+        if (hour >= 5 && hour < 11) base = "Selamat Pagi";
+        else if (hour >= 11 && hour < 15) base = "Selamat Siang";
+        else if (hour >= 15 && hour < 18) base = "Selamat Sore";
+        return base;
+    };
+
+    const progressCount = Object.values(prayerStatus).filter(v => v).length;
     const nextPrayer = getNextPrayer(schedule);
 
-    const parseApiDate = (dateStr: string) => {
-        try {
-            const parts = dateStr.split(',');
-            if (parts.length > 1) {
-                const datePart = parts[1].trim();
-                const [day, month, year] = datePart.split('/').map(Number);
-                return new Date(year, month - 1, day);
-            }
-            return new Date();
-        } catch {
-            return new Date();
-        }
-    };
-
-    const formatMonthlyDate = (rawDate: string) => {
-        try {
-            const d = parseApiDate(rawDate);
-            return format(d, 'd MMM', { locale: id });
-        } catch (e) {
-            return rawDate;
-        }
-    };
-
-    const getCurrentWeekSchedule = () => {
-        const now = new Date();
-        const start = startOfWeek(now, { weekStartsOn: 1 });
-        const end = endOfWeek(now, { weekStartsOn: 1 });
-
-        return monthlySchedule.filter(day => {
-            const dayDate = parseApiDate(day.tanggal);
-            return isWithinInterval(dayDate, { start, end });
-        });
-    };
-
-    const displayedSchedule = activeTab === 'week' ? getCurrentWeekSchedule() : monthlySchedule;
-
     return (
-        <div className="bg-white dark:bg-slate-950 min-h-screen pb-24 transition-colors">
-            <PageHeader 
-                title="" 
-                rightElement={
-                    <button 
-                        onClick={() => setIsAdzanEnabled(!isAdzanEnabled)}
-                        className={`p-2 rounded-xl transition-all flex items-center gap-2 ${isAdzanEnabled ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-slate-50 text-slate-400 dark:bg-slate-800'}`}
-                    >
-                        <Volume2 size={18} />
-                        <span className="text-[10px] font-black uppercase tracking-widest">{isAdzanEnabled ? 'ON' : 'OFF'}</span>
-                    </button>
-                }
-            />
-
-            {/* Name Input Modal */}
-            {showNameInput && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 w-full max-w-sm shadow-2xl border border-white/20 dark:border-slate-800">
-                        <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-2">Ahlan wa Sahlan</h2>
-                        <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">Boleh kami tahu nama Anda untuk sapaan di aplikasi?</p>
-                        <input 
-                            type="text"
-                            placeholder="Masukkan nama Anda..."
-                            className="w-full px-5 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 mb-6 focus:ring-2 focus:ring-emerald-500 outline-none text-slate-800 dark:text-white font-bold"
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') handleSaveName((e.target as HTMLInputElement).value);
-                            }}
-                            autoFocus
-                        />
-                        <button 
-                            onClick={() => {
-                                const val = (document.querySelector('input[placeholder="Masukkan nama Anda..."]') as HTMLInputElement).value;
-                                if (val) handleSaveName(val);
-                            }}
-                            className="w-full bg-emerald-600 text-white font-black py-4 rounded-2xl shadow-lg shadow-emerald-200 dark:shadow-none active:scale-95 transition-all"
-                        >
-                            Simpan & Lanjutkan
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {/* Search & Header Controls */}
-            <div className="max-w-md mx-auto px-4 pt-6 flex gap-2 relative z-30">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                    <input
-                        type="text"
-                        placeholder="Cari kota..."
-                        className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-inner text-slate-800 dark:text-white placeholder-slate-400 transition-all text-sm"
-                        value={searchQuery}
-                        onChange={handleSearch}
-                        onFocus={() => setShowDropdown(true)}
-                        onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-                    />
-                    {showDropdown && searchResults.length > 0 && (
-                        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 max-h-60 overflow-y-auto animate-in slide-in-from-top-2 duration-200">
-                            {searchResults.map((city) => (
-                                <button
-                                    key={city.id}
-                                    className="w-full px-4 py-3 text-left hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors flex items-center gap-2 border-b border-slate-50 dark:border-slate-700 last:border-0"
-                                    onClick={() => selectCity(city)}
-                                >
-                                    <MapPin size={16} className="text-emerald-500" />
-                                    <span className="text-slate-700 dark:text-slate-200 text-sm font-medium">{city.lokasi}</span>
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                </div>
-                <button
-                    onClick={handleGeolocation}
-                    disabled={locating}
-                    className="bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 p-3 rounded-2xl hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-all disabled:opacity-50 border border-emerald-100/50 dark:border-emerald-800/50"
-                >
-                    {locating ? <Loader2 className="animate-spin" size={20} /> : <Navigation size={20} />}
-                </button>
-            </div>
-
-            {loading ? (
-                <div className="flex flex-col justify-center items-center h-[60vh] gap-4">
-                    <div className="relative">
-                        <Loader2 className="animate-spin text-emerald-600" size={48} />
-                        <div className="absolute inset-0 blur-xl bg-emerald-400/20 animate-pulse"></div>
-                    </div>
-                    <p className="text-slate-400 text-sm font-black uppercase tracking-widest animate-pulse">Menyiapkan Jadwal...</p>
-                </div>
-            ) : schedule ? (
-                <div className="max-w-md mx-auto py-8 px-4">
-                    {/* Greeting Section */}
-                    <div className="flex justify-between items-end mb-8 px-2 animate-in fade-in slide-in-from-top-4 duration-700">
-                        <div>
-                            <h2 className="text-slate-400 dark:text-slate-500 font-bold text-[10px] uppercase tracking-[0.2em] mb-1">
-                                {getTimeGreeting()}
-                            </h2>
-                            <div className="flex items-center gap-3">
-                                <h1 className="text-xl font-black text-slate-800 dark:text-white tracking-tight leading-none">
-                                    Assalamu'alaikum<span className="text-emerald-500">,</span><br />
-                                    {userName || 'Akhi/Ukhti'}
-                                </h1>
-                                {!window.matchMedia('(display-mode: standalone)').matches && (
-                                    <button 
-                                        onClick={() => window.dispatchEvent(new Event('beforeinstallprompt'))}
-                                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl shadow-lg shadow-emerald-200 dark:shadow-none active:scale-95 transition-all animate-pulse"
-                                        title="Pasang Aplikasi"
-                                    >
-                                        <Download size={16} className="fill-white/20" />
-                                        <span className="text-[10px] font-black uppercase tracking-widest">Pasang App</span>
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                        <div className="text-right">
-                            <div className="bg-emerald-50 dark:bg-emerald-900/20 px-4 py-2 rounded-2xl border border-emerald-100 dark:border-emerald-800/50 shadow-sm">
-                                <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-black uppercase tracking-widest mb-0.5">Masehi</div>
-                                <div className="text-xs font-black text-slate-700 dark:text-emerald-100">
-                                    {format(new Date(), 'dd MMM yyyy')}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Main Dashboard Hero */}
-                    <div className="bg-gradient-to-br from-emerald-600 to-teal-800 rounded-[3rem] p-1 shadow-2xl shadow-emerald-200/50 dark:shadow-none overflow-hidden relative group mb-10 transition-transform duration-500 hover:scale-[1.01]">
-                        {/* Background Decor */}
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-[80px] -mr-32 -mt-32"></div>
-                        <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-400/20 rounded-full blur-[60px] -ml-24 -mb-24"></div>
-
-                        <div className="bg-white/10 backdrop-blur-md p-6 rounded-t-[2.8rem] flex justify-between items-center relative z-10 border-b border-white/10">
-                            <div className="flex items-center gap-2 bg-black/20 px-3 py-1.5 rounded-full border border-white/10">
-                                <MapPin size={14} className="text-emerald-200" />
-                                <span className="font-black text-[10px] text-white tracking-widest uppercase">{city?.lokasi}</span>
-                            </div>
-                            {hijriDate && (
-                                <div className="text-[10px] font-black text-emerald-100 uppercase tracking-[0.15em]">
-                                    {hijriDate.day} {hijriDate.month.en}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="p-10 relative text-center overflow-hidden">
-                            <div className="relative z-10">
-                                <div className="mb-10">
-                                    <div className="text-[80px] font-black text-white tabular-nums tracking-tighter font-mono drop-shadow-2xl leading-none flex items-start justify-center">
-                                        {format(currentTime, 'HH:mm')}
-                                        <span className="text-2xl text-emerald-200/60 ml-2 mt-4 font-black animate-pulse tabular-nums">
-                                            {format(currentTime, 'ss')}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div className="bg-white/10 backdrop-blur-xl rounded-[2.5rem] p-6 border border-white/20 inline-block w-full shadow-2xl overflow-hidden relative group/card">
-                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover/card:translate-x-full transition-transform duration-1000"></div>
-                                    <div className="flex items-center justify-between mb-4 px-1">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)]"></div>
-                                            <span className="text-emerald-50 text-[10px] font-black uppercase tracking-widest">Berikutnya: {nextPrayer?.name}</span>
-                                        </div>
-                                        <span className="text-emerald-100 text-[10px] font-bold uppercase tracking-widest bg-emerald-900/40 px-3 py-1 rounded-full">{nextPrayer?.time}</span>
-                                    </div>
-                                    <div className="text-4xl font-black text-white font-mono border-t border-white/10 pt-4 flex items-center justify-center gap-4">
-                                        <Clock size={32} className="text-emerald-300" />
-                                        {countdown}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Features Quick Access Grid */}
-                    <div className="grid grid-cols-2 gap-4 mb-10 px-1">
-                        <Link to="/quran" className="bg-gradient-to-br from-indigo-500 to-indigo-700 p-6 rounded-[2.5rem] text-white shadow-xl shadow-indigo-200 dark:shadow-none group relative overflow-hidden transition-all hover:-translate-y-1">
-                            <div className="absolute top-0 right-0 p-4 opacity-20 transition-transform group-hover:scale-125 group-hover:rotate-12 duration-500">
-                                <BookOpen size={60} />
-                            </div>
-                            <h3 className="font-black text-lg mb-1 relative z-10 tracking-tight">Al-Quran</h3>
-                            <p className="text-[10px] text-indigo-100 font-bold uppercase tracking-widest relative z-10 opacity-70">Baca & Simak</p>
-                        </Link>
-
-                        <Link to="/tasbih" className="bg-gradient-to-br from-emerald-500 to-teal-700 p-6 rounded-[2.5rem] text-white shadow-xl shadow-emerald-200 dark:shadow-none group relative overflow-hidden transition-all hover:-translate-y-1">
-                            <div className="absolute top-0 right-0 p-4 opacity-20 transition-transform group-hover:scale-125 group-hover:rotate-12 duration-500">
-                                <RotateCw size={60} />
-                            </div>
-                            <h3 className="font-black text-lg mb-1 relative z-10 tracking-tight">Tasbih</h3>
-                            <p className="text-[10px] text-emerald-100 font-bold uppercase tracking-widest relative z-10 opacity-70">Dzikir Harian</p>
-                        </Link>
-                        
-                        <Link to="/qibla" className="bg-white dark:bg-slate-800 p-6 rounded-[2.5rem] shadow-lg shadow-slate-200 dark:shadow-none border border-slate-100 dark:border-slate-700 group relative overflow-hidden transition-all hover:-translate-y-1">
-                            <div className="absolute top-0 right-0 p-4 text-emerald-600 dark:text-emerald-500 opacity-10 transition-transform group-hover:scale-125 group-hover:rotate-12 duration-500">
-                                <Compass size={60} />
-                            </div>
-                            <h3 className="font-black text-lg mb-1 text-slate-800 dark:text-white tracking-tight">Kiblat</h3>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Arah Sholat</p>
-                        </Link>
-                        
-                        <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 flex flex-col justify-center gap-2">
-                             <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.15em] mb-1 leading-none">Progres Hari Ini</p>
-                             <div className="flex items-center gap-3">
-                                 <span className="text-2xl font-black text-slate-800 dark:text-white leading-none">{Object.values(prayerStatus).filter(Boolean).length}/5</span>
-                                 <div className="flex-1 h-3 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner flex">
-                                     <div 
-                                         className="bg-gradient-to-r from-emerald-400 to-emerald-600 h-full rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(16,185,129,0.3)]"
-                                         style={{ width: `${(Object.values(prayerStatus).filter(Boolean).length / 5) * 100}%` }}
-                                     ></div>
-                                 </div>
-                             </div>
-                        </div>
-                    </div>
-
-                    {/* Prayer Times Section */}
-                    <div className="px-1 overflow-visible">
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest pl-2">Jadwal Sholat</h2>
-                            <div className="h-px bg-slate-100 dark:bg-slate-800 flex-1 ml-4 mr-4"></div>
-                        </div>
-
-                        {schedule && (
-                            <div className="grid grid-cols-1 gap-4">
-                                <PrayerItem 
-                                    icon={<Sunrise size={20} />} 
-                                    name="Subuh" 
-                                    time={schedule.jadwal.subuh} 
-                                    active={activePrayer === 'Subuh' || nextPrayer?.name === 'Subuh'}
-                                    checked={!!prayerStatus['Subuh']}
-                                    onToggle={() => togglePrayerStatus('Subuh')}
-                                />
-                                <PrayerItem 
-                                    icon={<Sun size={20} />} 
-                                    name="Dzuhur" 
-                                    time={schedule.jadwal.dzuhur} 
-                                    active={activePrayer === 'Dzuhur' || nextPrayer?.name === 'Dzuhur'}
-                                    checked={!!prayerStatus['Dzuhur']}
-                                    onToggle={() => togglePrayerStatus('Dzuhur')}
-                                />
-                                <PrayerItem 
-                                    icon={<Sun size={20} className="rotate-45" />} 
-                                    name="Ashar" 
-                                    time={schedule.jadwal.ashar} 
-                                    active={activePrayer === 'Ashar' || nextPrayer?.name === 'Ashar'}
-                                    checked={!!prayerStatus['Ashar']}
-                                    onToggle={() => togglePrayerStatus('Ashar')}
-                                />
-                                <PrayerItem 
-                                    icon={<Moon size={20} />} 
-                                    name="Maghrib" 
-                                    time={schedule.jadwal.maghrib} 
-                                    active={activePrayer === 'Maghrib' || nextPrayer?.name === 'Maghrib'}
-                                    checked={!!prayerStatus['Maghrib']}
-                                    onToggle={() => togglePrayerStatus('Maghrib')}
-                                />
-                                <PrayerItem 
-                                    icon={<Moon size={20} fill="currentColor" />} 
-                                    name="Isya" 
-                                    time={schedule.jadwal.isya} 
-                                    active={activePrayer === 'Isya' || nextPrayer?.name === 'Isya'}
-                                    checked={!!prayerStatus['Isya']}
-                                    onToggle={() => togglePrayerStatus('Isya')}
-                                />
-                                
-                                <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 opacity-60">
-                                    <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-3xl flex justify-between items-center">
-                                        <div>
-                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Imsak & Terbit</p>
-                                            <div className="flex gap-4">
-                                                <div className="text-xs font-black text-slate-700 dark:text-slate-300">Imsak {schedule.jadwal.imsak}</div>
-                                                <div className="text-xs font-black text-slate-700 dark:text-slate-300">Terbit {schedule.jadwal.terbit}</div>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                             <div className="text-[10px] text-emerald-600 font-black uppercase tracking-[0.2em] mb-1">Dhuha</div>
-                                             <div className="text-xl font-black text-slate-800 dark:text-white tabular-nums leading-none">{schedule.jadwal.dhuha}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+        <div className="bg-white dark:bg-slate-950 min-h-screen pb-32 transition-colors">
+            {/* New Header: Personalized Greeting at the very top */}
+            <div className="max-w-md mx-auto px-6 pt-8 pb-4 flex justify-between items-start relative z-40">
+                <div className="flex flex-col">
+                    <h2 className="text-lg font-black text-slate-800 dark:text-white leading-tight">
+                        {getTimeGreeting()},
+                        <br />
+                        <span className="text-emerald-500 dark:text-emerald-400">Assalamualaikum {userName}</span>
+                    </h2>
+                    <div className="flex flex-col gap-0.5 mt-2">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                            {format(currentTime, 'EEEE, dd MMMM yyyy', { locale: id })}
+                        </p>
+                        {hijriDate && (
+                            <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest">
+                                {Number(hijriDate.day) + hijriOffset} {hijriDate.month.en} {hijriDate.year}H
+                            </p>
                         )}
                     </div>
+                </div>
+                <div className="flex gap-2">
+                    <button 
+                        onClick={() => setIsAdzanEnabled(!isAdzanEnabled)}
+                        className={`p-3 rounded-2xl transition-all ${isAdzanEnabled ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30' : 'bg-slate-50 text-slate-400 dark:bg-slate-800'}`}
+                    >
+                        <Volume2 size={20} />
+                    </button>
+                    <button 
+                        onClick={() => setShowProfileModal(true)}
+                        className="bg-amber-500 text-white p-3 rounded-2xl shadow-lg shadow-amber-200 dark:shadow-none transition-all flex items-center justify-center hover:bg-amber-600"
+                    >
+                        <User size={20} />
+                    </button>
+                </div>
+            </div>
+
+            {/* Combined Hero Card - Theme Update: Green & Orange */}
+            <div className="max-w-md mx-auto px-4 mb-10 mt-2">
+                <div className="bg-gradient-to-br from-emerald-800 to-emerald-950 dark:from-slate-900 dark:to-black rounded-[3rem] p-8 border border-white/10 shadow-2xl relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl -mr-10 -mt-10 group-hover:bg-amber-500/20 transition-all duration-700"></div>
                     
-                    {/* Monthly Preview Tab */}
-                    <div className="mt-12 bg-white dark:bg-slate-800 rounded-[2.5rem] overflow-hidden shadow-sm border border-slate-50 dark:border-slate-800">
-                         <div className="flex border-b border-slate-50 dark:border-slate-800">
-                            <button
-                                onClick={() => setActiveTab('week')}
-                                className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'week' ? 'bg-emerald-50 text-emerald-600 border-b-2 border-emerald-500' : 'text-slate-400 dark:text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
-                            >
-                                Minggu Ini
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('month')}
-                                className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'month' ? 'bg-emerald-50 text-emerald-600 border-b-2 border-emerald-500' : 'text-slate-400 dark:text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
-                            >
-                                Bulan Ini
-                            </button>
+                    <div className="flex flex-col mb-8 relative z-10">
+                         <div className="flex items-center gap-1.5 mb-2">
+                            <MapPin size={10} className="text-amber-400" />
+                            <span className="text-[10px] font-bold text-white/50 uppercase tracking-widest">{city?.lokasi || 'Mencari...'}</span>
                         </div>
-                        <div className="overflow-x-auto p-2">
-                             <table className="w-full text-[10px] text-left">
-                                 <thead className="text-slate-400 font-black uppercase tracking-widest bg-slate-50 dark:bg-slate-700/50 rounded-xl">
-                                     <tr>
-                                         <th className="px-4 py-3">Tgl</th>
-                                         <th className="px-2 py-3">Subuh</th>
-                                         <th className="px-2 py-3">Dzuhur</th>
-                                         <th className="px-2 py-3">Ashar</th>
-                                         <th className="px-2 py-3">Maghrib</th>
-                                         <th className="px-2 py-3 pr-4">Isya</th>
-                                     </tr>
-                                 </thead>
-                                 <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-                                     {displayedSchedule.map((day, idx) => {
-                                         const dayDate = parseApiDate(day.tanggal);
-                                         const isToday = isSameDay(dayDate, new Date());
-                                         return (
-                                             <tr key={idx} className={`${isToday ? 'bg-emerald-50/50 dark:bg-emerald-900/10' : ''}`}>
-                                                 <td className="px-4 py-3 font-bold text-slate-700 dark:text-slate-300">
-                                                     {formatMonthlyDate(day.tanggal)}
-                                                 </td>
-                                                 <td className="px-2 py-3 font-mono">{day.subuh}</td>
-                                                 <td className="px-2 py-3 font-mono">{day.dzuhur}</td>
-                                                 <td className="px-2 py-3 font-mono">{day.ashar}</td>
-                                                 <td className="px-2 py-3 font-mono">{day.maghrib}</td>
-                                                 <td className="px-2 py-3 pr-4 font-mono">{day.isya}</td>
-                                             </tr>
-                                         );
-                                     })}
-                                 </tbody>
-                             </table>
+                        <div className="flex justify-between items-end">
+                            <div className="text-4xl font-black text-white flex items-baseline gap-2">
+                                {format(currentTime, 'HH:mm')}
+                                <span className="text-sm text-emerald-400/50 tabular-nums font-bold animate-pulse">{format(currentTime, 'ss')}</span>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-[8px] font-black text-white/40 uppercase tracking-[0.2em] mb-1">Selanjutnya</p>
+                                <p className="text-xs font-black text-amber-400 uppercase tracking-[0.1em]">{nextPrayer?.name} • {countdown}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4 border-t border-white/5 pt-8">
+                        <div className="text-center">
+                            <p className="text-[8px] font-black text-white/40 uppercase tracking-widest mb-1">Imsyak</p>
+                            <p className="text-xl font-black text-white tracking-tight">{schedule?.jadwal.imsak || '--:--'}</p>
+                        </div>
+                        <div className="text-center bg-white/5 py-4 rounded-2xl border border-white/5 shadow-inner scale-105">
+                            <p className="text-[8px] font-black text-amber-500 uppercase tracking-widest mb-1">Terbit</p>
+                            <p className="text-xl font-black text-white tracking-tight">{schedule?.jadwal.terbit || '--:--'}</p>
+                        </div>
+                        <div className="text-center">
+                            <p className="text-[8px] font-black text-white/40 uppercase tracking-widest mb-1">Dhuha</p>
+                            <p className="text-xl font-black text-white tracking-tight">{schedule?.jadwal.dhuha || '--:--'}</p>
                         </div>
                     </div>
                 </div>
-            ) : (
-                <div className="text-center mt-20 px-6">
-                    <div className="bg-emerald-50 p-6 rounded-full inline-block mb-4 shadow-inner">
-                        <MapPin size={40} className="text-emerald-500" />
+            </div>
+
+            {/* Premium Feature Cards - 3-Column Layout */}
+            <div className="max-w-md mx-auto px-6 mb-10">
+                <div className="grid grid-cols-2 gap-4">
+                    {/* Quran Card (Full Width Span) */}
+                    <Link to="/quran" className="col-span-2 group relative flex flex-col bg-gradient-to-br from-primary-600 to-primary-700 p-6 rounded-[2.5rem] shadow-xl shadow-primary-500/20 active:scale-95 transition-all overflow-hidden border border-white/10">
+                         <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-125 transition-transform duration-700">
+                            <Library size={140} />
+                         </div>
+                         <div className="relative z-10 flex items-center justify-between">
+                            <div>
+                                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-white mb-4 group-hover:rotate-6 transition-transform">
+                                    <Library size={28} />
+                                </div>
+                                <h3 className="text-white font-black text-2xl tracking-tight">Al-Quran</h3>
+                                <p className="text-primary-100 text-[10px] font-black uppercase tracking-widest opacity-80 mt-1">Pelajari & Baca Ayat Suci</p>
+                            </div>
+                            <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white group-hover:bg-white/20 transition-colors">
+                                <ChevronRight size={20} />
+                            </div>
+                         </div>
+                    </Link>
+
+                    {/* Tasbih Card */}
+                    <Link to="/tasbih" className="group relative flex flex-col bg-gradient-to-br from-secondary-500 to-secondary-600 p-5 rounded-[2.5rem] shadow-lg shadow-secondary-500/10 active:scale-95 transition-all overflow-hidden border border-white/10">
+                         <div className="absolute -right-4 -top-4 opacity-10 group-hover:scale-125 transition-transform duration-700">
+                             <Fingerprint size={80} />
+                         </div>
+                         <div className="relative z-10">
+                             <div className="w-10 h-10 bg-white/20 rounded-2xl flex items-center justify-center text-white mb-4 group-hover:rotate-12 transition-transform">
+                                 <Fingerprint size={22} />
+                             </div>
+                             <h3 className="text-white font-black text-lg tracking-tight">Tasbih</h3>
+                             <p className="text-secondary-50 text-[8px] font-black uppercase tracking-widest opacity-80">Digital Dzikir</p>
+                         </div>
+                    </Link>
+
+                    {/* Doa Card */}
+                    <Link to="/doa" className="group relative flex flex-col bg-gradient-to-br from-primary-700 to-primary-800 p-5 rounded-[2.5rem] shadow-lg shadow-primary-700/10 active:scale-95 transition-all overflow-hidden border border-white/10">
+                         <div className="absolute -right-4 -top-4 opacity-10 group-hover:scale-125 transition-transform duration-700">
+                             <Sparkles size={80} />
+                         </div>
+                         <div className="relative z-10">
+                             <div className="w-10 h-10 bg-white/20 rounded-2xl flex items-center justify-center text-white mb-4 group-hover:-rotate-12 transition-transform">
+                                 <Sparkles size={22} />
+                             </div>
+                             <h3 className="text-white font-black text-lg tracking-tight">Doa</h3>
+                             <p className="text-primary-50 text-[8px] font-black uppercase tracking-widest opacity-80">Kumpulan Doa</p>
+                         </div>
+                    </Link>
+                </div>
+            </div>
+
+            {/* Daily Prayer List & Progress */}
+            <div className="max-w-md mx-auto px-6">
+                <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest">Progres Sholat</h3>
+                    <div className="flex items-center gap-2 px-3 py-1 bg-slate-50 dark:bg-slate-800 rounded-full border border-slate-100 dark:border-slate-800 shadow-sm">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{progressCount}/5 Selesai</span>
                     </div>
-                    <h2 className="text-xl font-bold text-slate-800 mb-2">Lokasi Tidak Ditemukan</h2>
-                    <p className="text-slate-500 mb-6">
-                        Kami tidak dapat mendeteksi lokasi Anda secara otomatis.
-                    </p>
+                </div>
+
+                {loading ? (
+                    <div className="flex justify-center py-10"><Loader2 className="animate-spin text-emerald-500" /></div>
+                ) : schedule && (
+                    <div className="space-y-4">
+                        <PrayerItem icon={<Sunrise size={20} />} name="Subuh" time={schedule.jadwal.subuh} active={activePrayer === 'Subuh'} checked={!!prayerStatus['Subuh']} onToggle={() => togglePrayerStatus('Subuh')} />
+                        <PrayerItem icon={<Sun size={20} />} name="Dzuhur" time={schedule.jadwal.dzuhur} active={activePrayer === 'Dzuhur'} checked={!!prayerStatus['Dzuhur']} onToggle={() => togglePrayerStatus('Dzuhur')} />
+                        <PrayerItem icon={<Sun size={20} className="rotate-45" />} name="Ashar" time={schedule.jadwal.ashar} active={activePrayer === 'Ashar'} checked={!!prayerStatus['Ashar']} onToggle={() => togglePrayerStatus('Ashar')} />
+                        <PrayerItem icon={<Moon size={20} />} name="Maghrib" time={schedule.jadwal.maghrib} active={activePrayer === 'Maghrib'} checked={!!prayerStatus['Maghrib']} onToggle={() => togglePrayerStatus('Maghrib')} />
+                        <PrayerItem icon={<Moon size={20} fill="currentColor" />} name="Isya" time={schedule.jadwal.isya} active={activePrayer === 'Isya'} checked={!!prayerStatus['Isya']} onToggle={() => togglePrayerStatus('Isya')} />
+                    </div>
+                )}
+            </div>
+
+            {/* Profile Modal Update */}
+            {showProfileModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 w-full max-w-sm shadow-2xl border border-white/10 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-start mb-8">
+                            <h2 className="text-2xl font-black text-slate-800 dark:text-white">Profile</h2>
+                            <button onClick={() => setShowProfileModal(false)} className="p-2 bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-400 font-black">×</button>
+                        </div>
+                        <div className="space-y-6">
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Nama Panggilan</label>
+                                <input type="text" value={userName} onChange={(e) => {setUserName(e.target.value); localStorage.setItem('muslim_app_user_name', e.target.value);}} className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 outline-none text-slate-800 dark:text-white font-bold focus:border-emerald-500" />
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Tema</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button onClick={() => changeTheme('light')} className={`py-3 rounded-xl font-bold text-xs border transition-all flex items-center justify-center gap-2 ${theme === 'light' ? 'bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-200' : 'bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700'}`}><Sun size={14} /> Terang</button>
+                                    <button onClick={() => changeTheme('dark')} className={`py-3 rounded-xl font-bold text-xs border transition-all flex items-center justify-center gap-2 ${theme === 'dark' ? 'bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-200' : 'bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700'}`}><Moon size={14} /> Gelap</button>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Ubah Lokasi</label>
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                                    <input type="text" placeholder="Masukkan nama kota..." className="w-full pl-9 pr-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border-none text-xs font-bold text-slate-800 dark:text-white outline-none" value={searchQuery} onChange={handleSearch} />
+                                    {searchResults.length > 0 && (
+                                        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 z-[110] max-h-40 overflow-y-auto">
+                                            {searchResults.map(c => (
+                                                <button key={c.id} onClick={() => selectCity(c)} className="w-full p-3 text-left hover:bg-emerald-50 dark:hover:bg-emerald-900/30 text-xs font-bold text-slate-700 dark:text-slate-300 border-b last:border-0 border-slate-50 dark:border-slate-800">{c.lokasi}</button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                                <button onClick={handleGeolocation} disabled={locating} className="w-full mt-2 py-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest border border-emerald-100 dark:border-emerald-900/20 flex items-center justify-center gap-2 shadow-sm">
+                                    {locating ? <Loader2 size={12} className="animate-spin" /> : <Navigation size={12} />} Deteksi Otomatis
+                                </button>
+                            </div>
+                            <div className="pt-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Penyesuaian Hijriah</label>
+                                <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 p-2 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                    <button onClick={() => setHijriOffset(prev => prev - 1)} className="w-10 h-10 flex items-center justify-center bg-white dark:bg-slate-700 rounded-xl shadow-sm text-amber-600 font-black">-</button>
+                                    <div className="flex-1 text-center font-black text-slate-800 dark:text-white text-xs tracking-widest">{hijriOffset > 0 ? `+${hijriOffset}` : hijriOffset} HARI</div>
+                                    <button onClick={() => setHijriOffset(prev => prev + 1)} className="w-10 h-10 flex items-center justify-center bg-white dark:bg-slate-700 rounded-xl shadow-sm text-emerald-600 font-black">+</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button onClick={() => {setShowProfileModal(false); if(city) loadData(city.id, true);}} className="w-full bg-slate-900 dark:bg-white dark:text-slate-950 text-white font-black py-4 rounded-2xl active:scale-95 transition-all mt-8 shadow-xl">Simpan Perubahan</button>
+                    </div>
                 </div>
             )}
 
-            {/* Adzan Alert Modal */}
-            {showAdzanModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 w-full max-w-sm shadow-2xl text-center relative border border-white/20 dark:border-slate-800">
-                        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-emerald-500 rounded-full p-4 shadow-lg shadow-emerald-500/30 animate-pulse">
-                            <Volume2 size={32} className="text-white" />
-                        </div>
-
-                        <div className="mt-6">
-                            <h3 className="text-emerald-600 dark:text-emerald-400 font-bold text-lg uppercase tracking-widest mb-1">Waktu Sholat Telah Tiba</h3>
-                            <h2 className="text-4xl font-black text-slate-800 dark:text-white mb-2">{notifiedPrayer}</h2>
-                            <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
-                                Saatnya menunaikan ibadah sholat untuk wilayah <span className="font-semibold text-slate-700 dark:text-slate-200">{city?.lokasi}</span> dan sekitarnya.
-                            </p>
-
-                            <button
-                                onClick={handleStopAdzan}
-                                className="w-full bg-slate-900 dark:bg-slate-700 text-white font-bold py-3.5 rounded-2xl shadow-lg hover:bg-slate-800 dark:hover:bg-slate-600 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-                            >
-                                <span>Matikan Suara</span>
-                            </button>
-                        </div>
+            {/* Adzan Alert & Name Input (Styling updated but logic remains) */}
+            {showNameInput && (
+                <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 w-full max-w-sm shadow-2xl">
+                        <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-2 tracking-tight">Ahlan wa Sahlan</h2>
+                        <input type="text" placeholder="Siapa nama Anda?" className="w-full px-5 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 mb-6 font-bold outline-none focus:border-amber-500 transition-colors" onKeyDown={(e) => {if (e.key === 'Enter') handleSaveName((e.target as HTMLInputElement).value);}} />
+                        <button onClick={() => {const val = (document.querySelector('input') as HTMLInputElement).value; if (val) handleSaveName(val);}} className="w-full bg-emerald-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-emerald-200 dark:shadow-none">Lanjutkan</button>
                     </div>
                 </div>
             )}
         </div>
     );
 };
+
+
+const PrayerItem = ({ name, time, icon, active, checked, onToggle }: { name: string, time: string, icon: React.ReactNode, active: boolean, checked: boolean, onToggle: () => void }) => (
+    <div 
+        onClick={onToggle}
+        className={`flex items-center justify-between p-5 rounded-[2rem] transition-all cursor-pointer ${
+            active ? 'bg-emerald-600 text-white shadow-xl scale-[1.02] ring-4 ring-emerald-500/10' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-slate-800 shadow-sm hover:border-emerald-100 dark:hover:border-emerald-900/30'
+        } ${checked && !active ? 'opacity-60 grayscale-[0.5]' : ''}`}
+    >
+        <div className="flex items-center gap-4">
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${active ? 'bg-white/20' : 'bg-slate-50 dark:bg-slate-800 text-emerald-600'}`}>
+                {icon}
+            </div>
+            <div>
+                <p className={`text-[8px] font-black uppercase tracking-widest ${active ? 'text-emerald-100' : 'text-slate-400'}`}>{name}</p>
+                <div className="flex items-center gap-2">
+                    <p className="text-xl font-black tabular-nums">{time}</p>
+                    {checked && <CheckCircle2 size={14} className={active ? 'text-white' : 'text-emerald-500'} />}
+                </div>
+            </div>
+        </div>
+        <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${checked ? (active ? 'bg-white/30' : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600') : 'bg-slate-50 dark:bg-slate-800 text-slate-200'}`}>
+            <div className={`w-1.5 h-1.5 rounded-full ${checked ? (active ? 'bg-white' : 'bg-emerald-500') : 'bg-transparent'}`}></div>
+        </div>
+    </div>
+);
 
 const getNextPrayer = (schedule: any) => {
     if (!schedule) return null;
@@ -731,91 +506,13 @@ const getNextPrayer = (schedule: any) => {
         { name: 'Maghrib', time: schedule.jadwal.maghrib },
         { name: 'Isya', time: schedule.jadwal.isya },
     ];
-
-    let next = null;
     for (const t of times) {
         const [h, m] = t.time.split(':').map(Number);
         const pTime = new Date();
         pTime.setHours(h, m, 0);
-        if (pTime > now) {
-            next = t;
-            break;
-        }
+        if (pTime > now) return t;
     }
-
-    if (!next && times.length > 0) {
-        next = { ...times[0], nextDay: true };
-    }
-
-    return next || times[0];
+    return times[0];
 };
-
-
-
-const PrayerItem = ({ 
-    name, 
-    time, 
-    icon, 
-    active = false, 
-    isSecondary = false, 
-    checked = false, 
-    onToggle 
-}: { 
-    name: string; 
-    time: string; 
-    icon: React.ReactNode; 
-    active?: boolean; 
-    isSecondary?: boolean;
-    checked?: boolean;
-    onToggle?: () => void;
-}) => (
-    <div 
-        onClick={onToggle}
-        className={`group flex items-center justify-between p-5 rounded-[2rem] transition-all duration-300 cursor-pointer relative overflow-hidden ${
-        active 
-            ? 'bg-emerald-600 text-white shadow-xl shadow-emerald-200 dark:shadow-none scale-[1.03] z-10' 
-            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-slate-700 hover:border-emerald-200 hover:shadow-lg'
-        } ${checked && !active ? 'opacity-60 grayscale-[0.5]' : ''}`}
-    >
-        {active && (
-            <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent -translate-x-full group-hover/card:translate-x-full transition-transform duration-1000"></div>
-        )}
-        
-        <div className="flex items-center gap-4 relative z-10">
-            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:rotate-12 ${
-                active ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-700 text-emerald-600'
-            }`}>
-                {icon}
-            </div>
-            <div>
-                <p className={`text-[10px] font-black uppercase tracking-[0.2em] mb-0.5 ${active ? 'text-emerald-100' : 'text-slate-400'}`}>
-                    {name}
-                </p>
-                <p className="text-xl font-black tabular-nums tracking-tight">
-                    {time}
-                </p>
-            </div>
-        </div>
-        
-        <div className="flex items-center gap-3 relative z-10">
-            {active && (
-                <div className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest animate-pulse">
-                    Waktunya
-                </div>
-            )}
-            {!isSecondary && (
-                <div 
-                    className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
-                        checked 
-                            ? (active ? 'bg-white text-emerald-600' : 'bg-emerald-100 text-emerald-600 scale-110 shadow-inner') 
-                            : (active ? 'bg-white/20 text-white border border-white/40' : 'bg-slate-50 dark:bg-slate-700 text-slate-300 dark:text-slate-500 border border-slate-200 dark:border-slate-600 hover:scale-110')
-                    }`}
-                >
-                    {checked ? <CheckSquare size={18} /> : <Circle size={18} className="opacity-40" />}
-                </div>
-            )}
-        </div>
-    </div>
-);
 
 export default PrayerTimesPage;

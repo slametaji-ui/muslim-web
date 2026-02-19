@@ -1,4 +1,7 @@
 import axios from 'axios';
+import { calculateLocalPrayerTimes, LocalPrayerTimes } from './prayerService';
+import { format } from 'date-fns';
+import { id } from 'date-fns/locale';
 
 const API_BASE_URL = 'https://api.myquran.com/v2';
 
@@ -170,6 +173,27 @@ export const api = {
                 return null;
             }
         }, forceRefresh);
+    },
+
+    // Get local prayer times using coordinates
+    getLocalPrayerTimes: (lat: number, lon: number, date: Date = new Date(), options?: any): PrayerTimes => {
+        const localTimes = calculateLocalPrayerTimes(lat, lon, date, options);
+        return {
+            id: 0,
+            lokasi: 'Lokasi Anda',
+            daerah: 'Deteksi Otomatis',
+            koordinat: {
+                lat: lat,
+                lon: lon,
+                lintang: String(lat),
+                bujur: String(lon)
+            },
+            jadwal: {
+                tanggal: format(date, 'EEEE, dd/MM/yyyy', { locale: id }),
+                ...localTimes,
+                date: localTimes.date
+            }
+        };
     },
 
     // Get Hijri Date from Masehi

@@ -22,6 +22,7 @@
     "vite-plugin-pwa": "^1.2.0"
   },
   "dependencies": {
+    "adhan": "^4.4.3",
     "axios": "^1.13.2",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.556.0",

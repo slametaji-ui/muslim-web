@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Calendar, Moon, Clock, BookOpen, Sun, Compass, RotateCw, Home, MoonStar, Coins, Heart } from 'lucide-react';
+import { Calendar, Moon, Clock, Library, Sun, Compass, Fingerprint, Home, MoonStar, Coins, Heart } from 'lucide-react';
 import InstallPWA from './InstallPWA';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -28,9 +28,20 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         localStorage.setItem('theme', theme);
     }, [theme]);
 
-    const toggleTheme = () => {
-        setTheme(prev => prev === 'light' ? 'dark' : 'light');
-    };
+    useEffect(() => {
+        const handleThemeChange = () => {
+            const newTheme = localStorage.getItem('theme') as 'light' | 'dark';
+            if (newTheme && (newTheme === 'light' || newTheme === 'dark')) {
+                setTheme(newTheme);
+            }
+        };
+        window.addEventListener('storage', handleThemeChange);
+        window.addEventListener('theme-set', handleThemeChange);
+        return () => {
+            window.removeEventListener('storage', handleThemeChange);
+            window.removeEventListener('theme-set', handleThemeChange);
+        };
+    }, []);
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300">
@@ -41,21 +52,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 {children}
             </main>
 
-            {/* Theme Toggle Floating Button */}
-            <button
-                onClick={toggleTheme}
-                className="fixed top-4 right-4 z-50 p-3 rounded-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 shadow-xl active:scale-90 transition-all"
-                aria-label="Toggle Theme"
-            >
-                {theme === 'light' ? <Moon size={22} /> : <Sun size={22} />}
-            </button>
-
             {/* Mobile Bottom Navigation - Enhanced Aesthetics */}
             <div className="fixed bottom-0 left-0 right-0 px-4 pb-[env(safe-area-inset-bottom,1.5rem)] z-[100] pointer-events-none">
                 <div className="max-w-md mx-auto pointer-events-auto">
                     <nav className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-white/20 dark:border-slate-800/40 px-2 py-3 rounded-[2.5rem] flex justify-around items-center shadow-[0_15px_50px_-12px_rgba(0,0,0,0.4)] dark:shadow-none mb-2">
                         <MobileNavLink to="/" icon={<Home size={22} />} label="Beranda" active={isActive('/')} />
-                        <MobileNavLink to="/quran" icon={<BookOpen size={22} />} label="Quran" active={isActive('/quran')} />
+                        <MobileNavLink to="/quran" icon={<Library size={22} />} label="Quran" active={isActive('/quran')} />
                         <MobileNavLink to="/ramadan" icon={<MoonStar size={22} />} label="Ramadan" active={isActive('/ramadan')} />
                         <MobileNavLink to="/zakat" icon={<Coins size={22} />} label="Zakat" active={isActive('/zakat')} />
                         <MobileNavLink to="/muslimah" icon={<Heart size={22} />} label="Muslimah" active={isActive('/muslimah')} />
