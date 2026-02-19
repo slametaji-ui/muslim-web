@@ -11,6 +11,7 @@ import ThemeDetailPage from './pages/ThemeDetailPage';
 import QiblaPage from './pages/QiblaPage';
 import TasbihPage from './pages/TasbihPage';
 import SchedulePage from './pages/SchedulePage';
+import ProfilePage from './pages/ProfilePage';
 
 import RamadanPage from './pages/RamadanPage';
 import ZakatCalculatorPage from './pages/ZakatCalculatorPage';
@@ -36,6 +37,7 @@ function App() {
                     <Route path="/zakat" element={<ZakatCalculatorPage />} />
                     <Route path="/muslimah" element={<WomenHealthPage />} />
                     <Route path="/doa" element={<DoaPage />} />
+                    <Route path="/profile" element={<ProfilePage />} />
                 </Routes>
             </Layout>
         </Router>

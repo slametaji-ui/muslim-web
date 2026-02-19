@@ -25,7 +25,6 @@ const PrayerTimesPage: React.FC = () => {
     const [userName, setUserName] = useState(() => localStorage.getItem('muslim_app_user_name') || '');
     const [isAdzanEnabled, setIsAdzanEnabled] = useState(() => localStorage.getItem('muslim_app_adzan_enabled') === 'true');
     const [showNameInput, setShowNameInput] = useState(!localStorage.getItem('muslim_app_user_name'));
-    const [showProfileModal, setShowProfileModal] = useState(false);
     const [hijriOffset, setHijriOffset] = useState(() => Number(localStorage.getItem('muslim_app_hijri_offset')) || 0);
     const [madhab, setMadhab] = useState(() => localStorage.getItem('muslim_app_madhab') || 'shafi');
     const [theme, setTheme] = useState(() => (localStorage.getItem('theme') || 'light') as 'light' | 'dark');
@@ -200,6 +199,23 @@ const PrayerTimesPage: React.FC = () => {
         }
     };
 
+    useEffect(() => {
+        const syncSettings = () => {
+            setUserName(localStorage.getItem('muslim_app_user_name') || '');
+            setIsAdzanEnabled(localStorage.getItem('muslim_app_adzan_enabled') === 'true');
+            setHijriOffset(Number(localStorage.getItem('muslim_app_hijri_offset')) || 0);
+            setTheme((localStorage.getItem('theme') || 'light') as 'light' | 'dark');
+            const cachedCity = api.getLastCity();
+            if (cachedCity && city?.id !== cachedCity.id) {
+                setCity(cachedCity);
+                loadData(cachedCity.id);
+            }
+        };
+
+        window.addEventListener('theme-set', syncSettings);
+        return () => window.removeEventListener('theme-set', syncSettings);
+    }, [city]);
+
     const changeTheme = (newTheme: 'light' | 'dark') => {
         setTheme(newTheme);
         localStorage.setItem('theme', newTheme);
@@ -259,17 +275,17 @@ const PrayerTimesPage: React.FC = () => {
             {/* New Header: Personalized Greeting at the very top */}
             <div className="max-w-md mx-auto px-6 pt-8 pb-4 flex justify-between items-start relative z-40">
                 <div className="flex flex-col">
-                    <h2 className="text-lg font-black text-slate-800 dark:text-white leading-tight">
+                    <h2 className="text-lg font-bold text-slate-800 dark:text-white leading-tight">
                         {getTimeGreeting()},
                         <br />
                         <span className="text-emerald-500 dark:text-emerald-400">Assalamualaikum {userName}</span>
                     </h2>
                     <div className="flex flex-col gap-0.5 mt-2">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase ">
                             {format(currentTime, 'EEEE, dd MMMM yyyy', { locale: id })}
                         </p>
                         {hijriDate && (
-                            <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest">
+                            <p className="text-[10px] font-bold text-amber-500 uppercase ">
                                 {Number(hijriDate.day) + hijriOffset} {hijriDate.month.en} {hijriDate.year}H
                             </p>
                         )}
@@ -283,8 +299,8 @@ const PrayerTimesPage: React.FC = () => {
                         <Volume2 size={20} />
                     </button>
                     <button 
-                        onClick={() => setShowProfileModal(true)}
-                        className="bg-amber-500 text-white p-3 rounded-2xl shadow-lg shadow-amber-200 dark:shadow-none transition-all flex items-center justify-center hover:bg-amber-600"
+                        onClick={() => navigate('/profile')}
+                        className="bg-amber-500 text-white p-3 rounded-2xl shadow-lg shadow-amber-200 dark:shadow-none transition-all flex items-center justify-center hover:bg-amber-600 active:scale-90"
                     >
                         <User size={20} />
                     </button>
@@ -299,7 +315,7 @@ const PrayerTimesPage: React.FC = () => {
                     <div className="flex flex-col mb-8 relative z-10">
                          <div className="flex items-center gap-1.5 mb-2">
                             <MapPin size={10} className="text-amber-400" />
-                            <span className="text-[10px] font-bold text-white/50 uppercase tracking-widest">{city?.lokasi || 'Mencari...'}</span>
+                            <span className="text-[10px] font-bold text-white/50 uppercase ">{city?.lokasi || 'Mencari...'}</span>
                         </div>
                         <div className="flex justify-between items-end">
                             <div className="text-4xl font-black text-white flex items-baseline gap-2">
@@ -315,15 +331,15 @@ const PrayerTimesPage: React.FC = () => {
 
                     <div className="grid grid-cols-3 gap-4 border-t border-white/5 pt-8">
                         <div className="text-center">
-                            <p className="text-[8px] font-black text-white/40 uppercase tracking-widest mb-1">Imsyak</p>
+                            <p className="text-[8px] font-black text-white/40 uppercase  mb-1">Imsyak</p>
                             <p className="text-xl font-black text-white tracking-tight">{schedule?.jadwal.imsak || '--:--'}</p>
                         </div>
                         <div className="text-center bg-white/5 py-4 rounded-2xl border border-white/5 shadow-inner scale-105">
-                            <p className="text-[8px] font-black text-amber-500 uppercase tracking-widest mb-1">Terbit</p>
+                            <p className="text-[8px] font-black text-amber-500 uppercase  mb-1">Terbit</p>
                             <p className="text-xl font-black text-white tracking-tight">{schedule?.jadwal.terbit || '--:--'}</p>
                         </div>
                         <div className="text-center">
-                            <p className="text-[8px] font-black text-white/40 uppercase tracking-widest mb-1">Dhuha</p>
+                            <p className="text-[8px] font-black text-white/40 uppercase  mb-1">Dhuha</p>
                             <p className="text-xl font-black text-white tracking-tight">{schedule?.jadwal.dhuha || '--:--'}</p>
                         </div>
                     </div>
@@ -344,7 +360,7 @@ const PrayerTimesPage: React.FC = () => {
                                     <Library size={28} />
                                 </div>
                                 <h3 className="text-white font-black text-2xl tracking-tight">Al-Quran</h3>
-                                <p className="text-primary-100 text-[10px] font-black uppercase tracking-widest opacity-80 mt-1">Pelajari & Baca Ayat Suci</p>
+                                <p className="text-primary-100 text-[10px] font-black uppercase  opacity-80 mt-1">Pelajari & Baca Ayat Suci</p>
                             </div>
                             <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white group-hover:bg-white/20 transition-colors">
                                 <ChevronRight size={20} />
@@ -362,7 +378,7 @@ const PrayerTimesPage: React.FC = () => {
                                  <Fingerprint size={22} />
                              </div>
                              <h3 className="text-white font-black text-lg tracking-tight">Tasbih</h3>
-                             <p className="text-secondary-50 text-[8px] font-black uppercase tracking-widest opacity-80">Digital Dzikir</p>
+                             <p className="text-secondary-50 text-[8px] font-black uppercase  opacity-80">Digital Dzikir</p>
                          </div>
                     </Link>
 
@@ -376,7 +392,7 @@ const PrayerTimesPage: React.FC = () => {
                                  <Sparkles size={22} />
                              </div>
                              <h3 className="text-white font-black text-lg tracking-tight">Doa</h3>
-                             <p className="text-primary-50 text-[8px] font-black uppercase tracking-widest opacity-80">Kumpulan Doa</p>
+                             <p className="text-primary-50 text-[8px] font-black uppercase  opacity-80">Kumpulan Doa</p>
                          </div>
                     </Link>
                 </div>
@@ -385,10 +401,10 @@ const PrayerTimesPage: React.FC = () => {
             {/* Daily Prayer List & Progress */}
             <div className="max-w-md mx-auto px-6">
                 <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest">Progres Sholat</h3>
+                    <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase ">Progres Sholat</h3>
                     <div className="flex items-center gap-2 px-3 py-1 bg-slate-50 dark:bg-slate-800 rounded-full border border-slate-100 dark:border-slate-800 shadow-sm">
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{progressCount}/5 Selesai</span>
+                        <span className="text-[10px] font-black text-slate-500 uppercase ">{progressCount}/5 Selesai</span>
                     </div>
                 </div>
 
@@ -405,56 +421,6 @@ const PrayerTimesPage: React.FC = () => {
                 )}
             </div>
 
-            {/* Profile Modal Update */}
-            {showProfileModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 w-full max-w-sm shadow-2xl border border-white/10 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
-                        <div className="flex justify-between items-start mb-8">
-                            <h2 className="text-2xl font-black text-slate-800 dark:text-white">Profile</h2>
-                            <button onClick={() => setShowProfileModal(false)} className="p-2 bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-400 font-black">×</button>
-                        </div>
-                        <div className="space-y-6">
-                            <div>
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Nama Panggilan</label>
-                                <input type="text" value={userName} onChange={(e) => {setUserName(e.target.value); localStorage.setItem('muslim_app_user_name', e.target.value);}} className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 outline-none text-slate-800 dark:text-white font-bold focus:border-emerald-500" />
-                            </div>
-                            <div>
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Tema</label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <button onClick={() => changeTheme('light')} className={`py-3 rounded-xl font-bold text-xs border transition-all flex items-center justify-center gap-2 ${theme === 'light' ? 'bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-200' : 'bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700'}`}><Sun size={14} /> Terang</button>
-                                    <button onClick={() => changeTheme('dark')} className={`py-3 rounded-xl font-bold text-xs border transition-all flex items-center justify-center gap-2 ${theme === 'dark' ? 'bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-200' : 'bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700'}`}><Moon size={14} /> Gelap</button>
-                                </div>
-                            </div>
-                            <div>
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Ubah Lokasi</label>
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-                                    <input type="text" placeholder="Masukkan nama kota..." className="w-full pl-9 pr-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border-none text-xs font-bold text-slate-800 dark:text-white outline-none" value={searchQuery} onChange={handleSearch} />
-                                    {searchResults.length > 0 && (
-                                        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 z-[110] max-h-40 overflow-y-auto">
-                                            {searchResults.map(c => (
-                                                <button key={c.id} onClick={() => selectCity(c)} className="w-full p-3 text-left hover:bg-emerald-50 dark:hover:bg-emerald-900/30 text-xs font-bold text-slate-700 dark:text-slate-300 border-b last:border-0 border-slate-50 dark:border-slate-800">{c.lokasi}</button>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                                <button onClick={handleGeolocation} disabled={locating} className="w-full mt-2 py-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest border border-emerald-100 dark:border-emerald-900/20 flex items-center justify-center gap-2 shadow-sm">
-                                    {locating ? <Loader2 size={12} className="animate-spin" /> : <Navigation size={12} />} Deteksi Otomatis
-                                </button>
-                            </div>
-                            <div className="pt-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Penyesuaian Hijriah</label>
-                                <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 p-2 rounded-2xl border border-slate-100 dark:border-slate-800">
-                                    <button onClick={() => setHijriOffset(prev => prev - 1)} className="w-10 h-10 flex items-center justify-center bg-white dark:bg-slate-700 rounded-xl shadow-sm text-amber-600 font-black">-</button>
-                                    <div className="flex-1 text-center font-black text-slate-800 dark:text-white text-xs tracking-widest">{hijriOffset > 0 ? `+${hijriOffset}` : hijriOffset} HARI</div>
-                                    <button onClick={() => setHijriOffset(prev => prev + 1)} className="w-10 h-10 flex items-center justify-center bg-white dark:bg-slate-700 rounded-xl shadow-sm text-emerald-600 font-black">+</button>
-                                </div>
-                            </div>
-                        </div>
-                        <button onClick={() => {setShowProfileModal(false); if(city) loadData(city.id, true);}} className="w-full bg-slate-900 dark:bg-white dark:text-slate-950 text-white font-black py-4 rounded-2xl active:scale-95 transition-all mt-8 shadow-xl">Simpan Perubahan</button>
-                    </div>
-                </div>
-            )}
 
             {/* Adzan Alert & Name Input (Styling updated but logic remains) */}
             {showNameInput && (
@@ -483,7 +449,7 @@ const PrayerItem = ({ name, time, icon, active, checked, onToggle }: { name: str
                 {icon}
             </div>
             <div>
-                <p className={`text-[8px] font-black uppercase tracking-widest ${active ? 'text-emerald-100' : 'text-slate-400'}`}>{name}</p>
+                <p className={`text-[8px] font-black uppercase  ${active ? 'text-emerald-100' : 'text-slate-400'}`}>{name}</p>
                 <div className="flex items-center gap-2">
                     <p className="text-xl font-black tabular-nums">{time}</p>
                     {checked && <CheckCircle2 size={14} className={active ? 'text-white' : 'text-emerald-500'} />}

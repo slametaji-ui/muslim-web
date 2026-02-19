@@ -12,7 +12,7 @@ const RamadanPage: React.FC = () => {
             const date = new Date(saved);
             if (!isNaN(date.getTime())) return date;
         }
-        return new Date('2025-03-01'); // Default estimation
+        return new Date('2026-02-20'); // Default estimation
     });
     
     const [currentTime, setCurrentTime] = useState(new Date());
@@ -66,7 +66,7 @@ const RamadanPage: React.FC = () => {
                         {isRamadan ? (
                             <div>
                                 <h2 className="text-sm font-black uppercase tracking-[0.3em] text-primary-100 mb-2">Marhaban ya Ramadan</h2>
-                                <div className="text-6xl font-black mb-2 flex justify-center items-end gap-2">
+                                <div className="text-4xl font-black mb-2 flex justify-center items-end gap-2">
                                     <span>Hari Ke-</span>
                                     <span className="text-secondary-300">{differenceInDays(currentTime, ramadanStart) + 1}</span>
                                 </div>
