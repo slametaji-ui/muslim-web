@@ -19,10 +19,16 @@ import RamadanPage from './pages/RamadanPage';
 import ZakatCalculatorPage from './pages/ZakatCalculatorPage';
 import WomenHealthPage from './pages/WomenHealthPage';
 import DoaPage from './pages/DoaPage';
+import Onboarding from './components/Onboarding';
 
 function App() {
+    const [showOnboarding, setShowOnboarding] = React.useState(() => {
+        return localStorage.getItem('muslim_app_setup_done') !== 'true';
+    });
+
     return (
         <Router>
+            {showOnboarding && <Onboarding onComplete={() => setShowOnboarding(false)} />}
             <ScrollToTop />
             <Layout>
                 <Routes>

@@ -51,7 +51,7 @@ const SchedulePage: React.FC = () => {
         try {
             const year = monthDate.getFullYear();
             const month = monthDate.getMonth() + 1;
-            
+
             const dailyData = await api.getPrayerTimes(cityId, monthDate);
             const lat = dailyData?.koordinat?.lat;
             const lon = dailyData?.koordinat?.lon;
@@ -61,12 +61,12 @@ const SchedulePage: React.FC = () => {
 
             // Pre-fetch Hijri for the current day to show in header or for offset calculation
             // For monthly, we might need a better way, but for now let's add it per item in loop
-            
+
             if (lat && lon) {
                 for (let d = 1; d <= daysInMonth; d++) {
                     const calcDate = new Date(year, month - 1, d);
                     const times = api.getLocalPrayerTimes(lat, lon, calcDate, calculationOptions);
-                    
+
                     // Note: We avoid calling API for every day in loop. 
                     // We'll calculate Hijri offset locally if possible or just show Greg.
                     // For now, let's just make sure the offset is applied to calculations.
@@ -80,16 +80,16 @@ const SchedulePage: React.FC = () => {
                 if (apiData && (apiData as any).jadwal) {
                     const list = (apiData as any).jadwal || [];
                     list.forEach((item: any) => {
-                         scheduleData.push({
+                        scheduleData.push({
                             ...item,
                             date: item.date
-                         } as MonthlySchedule);
+                        } as MonthlySchedule);
                     });
                 }
             }
-            
+
             setMonthlySchedule(scheduleData);
-            
+
             // Fetch Hijri for header
             const hData = await api.getHijriDate(monthDate);
             setHijriDate(hData);
@@ -134,7 +134,7 @@ const SchedulePage: React.FC = () => {
                 <div className="absolute top-0 right-0 p-8 opacity-5 text-white pointer-events-none">
                     <CalendarIcon size={120} />
                 </div>
-                
+
                 <div className="relative z-10">
                     <div className="flex items-center justify-between mb-8">
                         <button onClick={() => navigate(-1)} className="w-10 h-10 bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl flex items-center justify-center text-white hover:bg-white/20 transition-all">
@@ -147,11 +147,11 @@ const SchedulePage: React.FC = () => {
                             </div>
                         </div>
                     </div>
-                    
+
                     <h1 className="text-3xl font-black text-white tracking-tight mb-2">Jadwal Sholat</h1>
-                    
+
                     <div className="mt-6 flex flex-col items-center">
-                        <h2 className="text-[10px] font-black text-emerald-300 uppercase tracking-[0.3em] mb-4">
+                        <h2 className="text-[10px] font-black text-emerald-300 uppercase  mb-4">
                             Jadwal Sholat {format(currentMonth, 'MMMM yyyy', { locale: id })}
                         </h2>
                         {hijriDate && (
@@ -186,13 +186,13 @@ const SchedulePage: React.FC = () => {
             <div className="max-w-md mx-auto px-6 py-8">
                 {/* Tab Switcher - Using Premium Modern Style */}
                 <div className="flex bg-white dark:bg-slate-900 p-1.5 rounded-[2rem] border border-slate-100 dark:border-slate-800/50 shadow-sm mb-8">
-                    <button 
+                    <button
                         onClick={() => setActiveTab('week')}
                         className={`flex-1 py-3.5 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'week' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20' : 'text-slate-400 hover:text-emerald-600'}`}
                     >
                         Minggu Ini
                     </button>
-                    <button 
+                    <button
                         onClick={() => setActiveTab('month')}
                         className={`flex-1 py-3.5 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'month' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20' : 'text-slate-400 hover:text-emerald-600'}`}
                     >
@@ -228,8 +228,8 @@ const SchedulePage: React.FC = () => {
                             const hijriMonthYear = day.hijri ? day.hijri.split(' ').slice(1).join(' ') : null;
 
                             return (
-                                <div 
-                                    key={idx} 
+                                <div
+                                    key={idx}
                                     className={`bg-white dark:bg-slate-900 p-8 rounded-[3rem] border transition-all duration-500 overflow-hidden relative group ${isToday ? 'border-amber-400 shadow-2xl shadow-amber-500/10 ring-4 ring-amber-500/5' : 'border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md'}`}
                                 >
                                     {isToday && (
@@ -267,7 +267,7 @@ const SchedulePage: React.FC = () => {
                                 </div>
                             );
                         }) : (
-                             <div className="flex flex-col items-center justify-center py-20 gap-4 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800">
+                            <div className="flex flex-col items-center justify-center py-20 gap-4 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800">
                                 <CalendarIcon size={48} className="text-slate-200" />
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Jadwal tidak tersedia</p>
                             </div>

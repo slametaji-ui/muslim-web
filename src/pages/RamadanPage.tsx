@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import PageHeader from '../components/PageHeader';
+import { api } from '../services/api';
 import { Calendar, Moon, Star, Clock, Bell, Info, ChevronLeft, Sparkles, MoonStar } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { format, differenceInDays, isBefore, isAfter, startOfDay, addDays } from 'date-fns';
@@ -14,11 +15,40 @@ const RamadanPage: React.FC = () => {
         }
         return new Date('2026-03-01'); // Ramadan 2026 approx start
     });
-    
+
     const [currentTime, setCurrentTime] = useState(new Date());
 
     useEffect(() => {
         localStorage.setItem('muslim_app_ramadan_start', ramadanStart.toISOString());
+
+        // Recalculate Hijri Offset when Ramadan date changes manually
+        const updateOffset = async () => {
+            try {
+                const apiHijri = await api.getHijriDate(ramadanStart);
+                if (apiHijri) {
+                    const apiMonth = parseInt(apiHijri.month.number);
+                    const apiDay = parseInt(apiHijri.day);
+
+                    let offset = 0;
+                    if (apiMonth === 9) {
+                        offset = 1 - apiDay;
+                    } else if (apiMonth < 9) {
+                        offset = (9 - apiMonth) * 30 + (1 - apiDay);
+                    } else {
+                        offset = (apiMonth - 9) * -30 + (1 - apiDay);
+                    }
+
+                    if (Math.abs(offset) > 5) offset = 0;
+                    localStorage.setItem('muslim_app_hijri_offset', offset.toString());
+                    // Notify other pages
+                    window.dispatchEvent(new Event('theme-set'));
+                }
+            } catch (e) {
+                console.error("Ramadan page offset update failed", e);
+            }
+        };
+
+        updateOffset();
     }, [ramadanStart]);
 
     useEffect(() => {
@@ -28,13 +58,13 @@ const RamadanPage: React.FC = () => {
 
     const ramadanEnd = addDays(ramadanStart, 30);
     const isRamadan = isAfter(currentTime, startOfDay(ramadanStart)) && isBefore(currentTime, startOfDay(ramadanEnd));
-    
+
     const daysToRamadan = differenceInDays(startOfDay(ramadanStart), startOfDay(currentTime));
-    
+
     // If Ramadan has passed, set countdown to next year (roughly 354 days apart)
     let displayDays = daysToRamadan;
     if (daysToRamadan < 0 && !isRamadan) {
-        displayDays = daysToRamadan + 354; 
+        displayDays = daysToRamadan + 354;
     }
 
     return (
@@ -52,18 +82,18 @@ const RamadanPage: React.FC = () => {
                     <p className="text-primary-100 text-xs font-black uppercase  opacity-80 mt-1">Bulan Penuh Berkah</p>
                 </div>
             </div>
-            
+
             <div className="max-w-md mx-auto px-6 pt-8">
                 {/* Hero Countdown / Status */}
                 <div className="bg-gradient-to-br from-primary-600 to-primary-700 rounded-[3rem] p-10 text-white shadow-xl shadow-primary-500/20 relative overflow-hidden mb-10 group">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 animate-pulse"></div>
                     <div className="absolute bottom-0 left-0 w-24 h-24 bg-secondary-400/20 rounded-full blur-2xl -ml-12 -mb-12"></div>
-                    
+
                     <div className="relative z-10 text-center">
                         <div className="inline-flex p-4 bg-white/10 backdrop-blur-md rounded-3xl mb-6 border border-white/20">
                             <Moon className="text-yellow-200 fill-yellow-200" size={40} />
                         </div>
-                        
+
                         {isRamadan ? (
                             <div>
                                 <h2 className="text-sm font-black uppercase text-primary-100 mb-2">Marhaban ya Ramadan</h2>
@@ -96,14 +126,14 @@ const RamadanPage: React.FC = () => {
                             <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold ">Prediksi mulai puasa</p>
                         </div>
                     </div>
-                    
-                    <input 
-                        type="date" 
+
+                    <input
+                        type="date"
                         className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-800 dark:text-white font-black text-sm focus:ring-2 focus:ring-primary-500 outline-none transition-all shadow-inner"
                         value={ramadanStart instanceof Date && !isNaN(ramadanStart.getTime()) ? format(ramadanStart, 'yyyy-MM-dd') : '2025-03-01'}
                         onChange={(e) => setRamadanStart(new Date(e.target.value))}
                     />
-                    
+
                     <div className="mt-4 flex items-start gap-2 opacity-60">
                         <Info size={14} className="text-secondary-500 shrink-0 mt-0.5" />
                         <p className="text-[10px] text-slate-500 font-bold leading-relaxed">

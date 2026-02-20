@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { Search, Book, Loader2, Library, ChevronRight, Share2, Copy, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useToast } from '../components/CustomToast';
 
 const HadithPage: React.FC = () => {
+    const { showToast, ToastComponent } = useToast();
     const [hadiths, setHadiths] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -19,13 +21,37 @@ const HadithPage: React.FC = () => {
         setLoading(false);
     };
 
-    const filteredHadiths = hadiths.filter(h => 
+    const handleCopy = (hadith: any) => {
+        const text = `${hadith.judul}\n\n${hadith.arab}\n\n${hadith.indo}`;
+        navigator.clipboard.writeText(text);
+        showToast('Hadits berhasil disalin!');
+    };
+
+    const handleShare = async (hadith: any) => {
+        const text = `${hadith.judul}\n\n${hadith.arab}\n\n${hadith.indo}`;
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: hadith.judul,
+                    text: text,
+                    url: window.location.origin,
+                });
+            } catch (err) {
+                console.error("Share failed", err);
+            }
+        } else {
+            handleCopy(hadith);
+        }
+    };
+
+    const filteredHadiths = hadiths.filter(h =>
         h.judul.toLowerCase().includes(searchQuery.toLowerCase()) ||
         h.indo.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     return (
         <div className="max-w-md mx-auto w-full pb-32 dark:bg-slate-950 transition-colors min-h-screen">
+            {ToastComponent}
             {/* Header */}
             <div className="bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-600 pt-12 pb-6 px-6 rounded-b-[2.5rem] shadow-lg mb-6 text-white text-center relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-10 rotate-12">
@@ -61,8 +87,8 @@ const HadithPage: React.FC = () => {
                 ) : filteredHadiths.length > 0 ? (
                     <div className="grid grid-cols-1 gap-4">
                         {filteredHadiths.map((hadith, index) => (
-                            <div 
-                                key={hadith.no} 
+                            <div
+                                key={hadith.no}
                                 className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-xl hover:shadow-primary-500/5 transition-all group animate-in fade-in slide-in-from-bottom-4 duration-300"
                                 style={{ animationDelay: `${index * 50}ms` }}
                             >
@@ -83,12 +109,14 @@ const HadithPage: React.FC = () => {
                                     </p>
                                 </div>
                                 <div className="mt-6 pt-4 border-t border-slate-50 dark:border-slate-800/50 flex justify-end gap-2">
-                                    <button className="p-2.5 text-slate-300 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-xl transition-all"><Share2 size={16} /></button>
-                                    <button 
-                                        onClick={() => {
-                                            navigator.clipboard.writeText(`${hadith.judul}\n\n${hadith.arab}\n\n${hadith.indo}`);
-                                            alert('Hadits berhasil disalin!');
-                                        }}
+                                    <button
+                                        onClick={() => handleShare(hadith)}
+                                        className="p-2.5 text-slate-300 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-xl transition-all"
+                                    >
+                                        <Share2 size={16} />
+                                    </button>
+                                    <button
+                                        onClick={() => handleCopy(hadith)}
                                         className="p-2.5 text-slate-300 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-xl transition-all"
                                     >
                                         <Copy size={16} />

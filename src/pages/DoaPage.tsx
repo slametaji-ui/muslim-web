@@ -137,27 +137,27 @@ const doaContent: Record<string, DoaItem[]> = {
         { id: 'bt-3', title: 'Doa Kamilin (Setelah Tarawih)', arabic: 'اللّٰهُمَّ اجْعَلْنَا بِالْإِيْمَانِ كَامِلِيْنَ...', latin: 'Allahummaj\'alna bil iimaani kaamiliin...', translation: 'Ya Allah, jadikanlah kami orang-orang yang sempurna imannya...' }
     ],
     'matsurat': [
-        { 
-            id: 'm-1', 
-            title: 'Al-Fatihah', 
-            arabic: 'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ (١) الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ (٢) الرَّحْمَنِ الرَّحِيمِ (٣) مَالِكِ يَوْمِ الدِّينِ (٤) إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ (٥) اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ (٦) صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ (٧)', 
-            latin: 'Bismillahir rahmānir rahīm. Al-hamdu lillāhi rabbil-ālamīn. Ar-rahmānir-rahīm. Māliki yaumid-dīn. Iyyāka na\'budu wa iyyāka nasta\'īn. Ihdinash-shirāthal-mustaqīm. Shirāthalladzīna an\'amta \'alaihim ghairil-maghdhūbi \'alaihim waladh-dhāllīn.', 
+        {
+            id: 'm-1',
+            title: 'Al-Fatihah',
+            arabic: 'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ (١) الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ (٢) الرَّحْمَنِ الرَّحِيمِ (٣) مَالِكِ يَوْمِ الدِّينِ (٤) إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ (٥) اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ (٦) صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ (٧)',
+            latin: 'Bismillahir rahmānir rahīm. Al-hamdu lillāhi rabbil-ālamīn. Ar-rahmānir-rahīm. Māliki yaumid-dīn. Iyyāka na\'budu wa iyyāka nasta\'īn. Ihdinash-shirāthal-mustaqīm. Shirāthalladzīna an\'amta \'alaihim ghairil-maghdhūbi \'alaihim waladh-dhāllīn.',
             translation: 'Dengan menyebut nama Allah Yang Maha Pemurah lagi Maha Penyayang. Segala puji bagi Allah, Tuhan semesta alam. Maha Pemurah lagi Maha Penyayang. Yang menguasai di Hari Pembalasan. Hanya Engkaulah yang kami sembah, dan hanya kepada Engkaulah kami meminta pertolongan. Tunjukilah kami jalan yang lurus. (yaitu) Jalan orang-orang yang telah Engkau beri nikmat kepada mereka; bukan (jalan) mereka yang dimurkai dan bukan (pula jalan) mereka yang sesat.',
             fullText: true
         },
-        { 
-            id: 'm-2', 
-            title: 'Al-Baqarah 1-5', 
-            arabic: 'الم (١) ذَلِكَ الْكِتَابُ لَا رَيْبَ فِيهِ هُدًى لِلْمُتَّقِينَ (٢) الَّذِينَ يُؤْمِنُونَ بِالْغَيْبِ وَيُقِيمُونَ الصَّلَاةَ وَمِمَّا رَزَقْنَاهُمْ يُنْفِقُونَ (٣) وَالَّذِينَ يُؤْمِنُونَ بِمَا أُنْزِلَ إِلَيْكَ وَمَا أُنْزِلَ مِنْ قَبْلِكَ وَبِالْآخِرَةِ هُمْ يُوقِنُونَ (٤) أُولَئِكَ عَلَى هُدًى مِنْ رَبِّهِمْ وَأُولَئِكَ هُمُ الْمُفْلِحُونَ (٥)', 
-            latin: 'Alif-lām-mīm. Dzālikal-kitābu lā raiba fīhi hudal-lil-muttaqīn. Alladzīna yu\'minūna bil-ghaibi wa yuqīmūnash-shalāta wa mimmā razaqnāhum yunfiqūn. Walladzīna yu\'minūna bimā unzila ilaika wa mā unzila min qablika wa bil-ākhirati hum yūqinūn. Ulā\'ika \'alā hudam-mir-rabbihim wa ulā\'ika humul-muflihūn.', 
+        {
+            id: 'm-2',
+            title: 'Al-Baqarah 1-5',
+            arabic: 'الم (١) ذَلِكَ الْكِتَابُ لَا رَيْبَ فِيهِ هُدًى لِلْمُتَّقِينَ (٢) الَّذِينَ يُؤْمِنُونَ بِالْغَيْبِ وَيُقِيمُونَ الصَّلَاةَ وَمِمَّا رَزَقْنَاهُمْ يُنْفِقُونَ (٣) وَالَّذِينَ يُؤْمِنُونَ بِمَا أُنْزِلَ إِلَيْكَ وَمَا أُنْزِلَ مِنْ قَبْلِكَ وَبِالْآخِرَةِ هُمْ يُوقِنُونَ (٤) أُولَئِكَ عَلَى هُدًى مِنْ رَبِّهِمْ وَأُولَئِكَ هُمُ الْمُفْلِحُونَ (٥)',
+            latin: 'Alif-lām-mīm. Dzālikal-kitābu lā raiba fīhi hudal-lil-muttaqīn. Alladzīna yu\'minūna bil-ghaibi wa yuqīmūnash-shalāta wa mimmā razaqnāhum yunfiqūn. Walladzīna yu\'minūna bimā unzila ilaika wa mā unzila min qablika wa bil-ākhirati hum yūqinūn. Ulā\'ika \'alā hudam-mir-rabbihim wa ulā\'ika humul-muflihūn.',
             translation: 'Alif Lam Mim. Kitab (Al-Quran) ini tidak ada keraguan padanya; petunjuk bagi mereka yang bertakwa. (Yaitu) mereka yang beriman kepada yang ghaib, yang mendirikan shalat, dan menafkahkan sebagian rezeki yang Kami anugerahkan kepada mereka. Dan mereka yang beriman kepada Kitab (Al-Quran) yang telah diturunkan kepadamu dan kitab-kitab yang telah diturunkan sebelummu, serta mereka yakin akan adanya (kehidupan) akhirat. Mereka itulah yang tetap mendapat petunjuk dari Tuhan mereka, dan merekalah orang-orang yang beruntung.',
             fullText: true
         },
-        { 
-            id: 'm-3', 
-            title: 'Ayat Kursi', 
-            arabic: 'اللَّهُ لاَ إِلَهَ إِلاَّ هُوَ الْحَيُّ الْقَيُّومُ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ لَهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ مَنْ ذَا الَّذِي يَشْفَعُ عِنْدَهُ إِلَّا بِإِذْنِهِ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ وَلَا يُحِيطُونَ بِشَيْءٍ مِنْ عِلْمِهِ إِلَّا بِمَا شَاءَ وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالْأَرْضَ وَلَا يَئُودُهُ حِفْظُهُمَا وَهُوَ الْعَلِيُّ الْعَظِيمُ', 
-            latin: 'Allāhu lā ilāha illā huwal-hayyul-qayyūm, lā ta\'khudzuhū sinatuw walā naum, lahū mā fis-samāwāti wa mā fil-ardh, man dzalladzī yasyfa\'u \'indahū illā bi\'idznih, ya\'lamu mā baina aidīhim wa mā khalfahum, walā yuhīthūna bisyai\'im min \'ilmihī illā bimā syā\', wasi\'a kursiyyuhus-samāwāti wal-ardh, walā ya\'ūduhū hifzhuhumā wa huwal-\'aliyyul-\'azhīm.', 
+        {
+            id: 'm-3',
+            title: 'Ayat Kursi',
+            arabic: 'اللَّهُ لاَ إِلَهَ إِلاَّ هُوَ الْحَيُّ الْقَيُّومُ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ لَهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ مَنْ ذَا الَّذِي يَشْفَعُ عِنْدَهُ إِلَّا بِإِذْنِهِ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ وَلَا يُحِيطُونَ بِشَيْءٍ مِنْ عِلْمِهِ إِلَّا بِمَا شَاءَ وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالْأَرْضَ وَلَا يَئُودُهُ حِفْظُهُمَا وَهُوَ الْعَلِيُّ الْعَظِيمُ',
+            latin: 'Allāhu lā ilāha illā huwal-hayyul-qayyūm, lā ta\'khudzuhū sinatuw walā naum, lahū mā fis-samāwāti wa mā fil-ardh, man dzalladzī yasyfa\'u \'indahū illā bi\'idznih, ya\'lamu mā baina aidīhim wa mā khalfahum, walā yuhīthūna bisyai\'im min \'ilmihī illā bimā syā\', wasi\'a kursiyyuhus-samāwāti wal-ardh, walā ya\'ūduhū hifzhuhumā wa huwal-\'aliyyul-\'azhīm.',
             translation: 'Allah, tidak ada Tuhan (yang berhak disembah) melainkan Dia Yang Hidup kekal lagi terus menerus mengurus (makhluk-Nya); tidak mengantuk dan tidak tidur. Kepunyaan-Nya apa yang di langit dan di bumi. Tiada yang dapat memberi syafaat di sisi Allah tanpa izin-Nya? Allah mengetahui apa-apa yang di hadapan mereka dan di belakang mereka, dan mereka tidak mengetahui apa-apa dari ilmu Allah melainkan apa yang dikehendaki-Nya. Kursi Allah meliputi langit dan bumi. Dan Allah tidak merasa berat memelihara keduanya, dan Allah Maha Tinggi lagi Maha Besar.',
             fullText: true
         },
@@ -235,7 +235,15 @@ const doaContent: Record<string, DoaItem[]> = {
         { id: 'h-4', title: 'Bangun Tidur', arabic: 'الْحَمْدُ لِلَّهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا وَإِلَيْهِ النُّشُورُ', latin: 'Alhamdu lillaahil ladzii ahyaanaa ba’da maa amaatanaa wa ilaihin nusyuur.', translation: 'Segala puji bagi Allah yang telah menghidupkan kami setelah mematikan kami, dan kepada-Nya lah tempat kembali.' },
         { id: 'h-5', title: 'Masuk Masjid', arabic: 'اللَّهُمَّ افْتَحْ لِي أَبْوَابَ رَحْمَتِكَ', latin: 'Allahummaftah lii abwaaba rahmatik.', translation: 'Ya Allah, bukalah pintu-pintu rahmat-Mu untukku.' },
         { id: 'h-6', title: 'Keluar Masjid', arabic: 'اللَّهُمَّ إِنِّي أَسْأَلُكَ مِنْ فَضْلِكَ', latin: 'Allahumma innii as’aluka min fadhlik.', translation: 'Ya Allah, sesungguhnya aku memohon keutamaan dari-Mu.' },
-        { id: 'h-7', title: 'Untuk Orang Tua', arabic: 'رَبِّ اغْفِرْ لِي وَلِوَالِدَيَّ وَارْحَمْهُمَا كَمَا رَبَّيَانِي صَغِيرًا', latin: 'Rabbighfir lii wa liwaalidayya warhamhumaa kamaa rabbayaanii shaghiiraa.', translation: 'Ya Tuhanku, ampunilah dosaku dan dosa kedua orang tuaku, dan kasihilah mereka keduanya sebagaimana mereka berdua telah mendidik aku di waktu kecil.' }
+        { id: 'h-7', title: 'Untuk Orang Tua', arabic: 'رَبِّ اغْفِرْ لِي وَلِوَالِدَيَّ وَارْحَمْهُمَا كَمَا رَبَّيَانِي صَغِيرًا', latin: 'Rabbighfir lii wa liwaalidayya warhamhumaa kamaa rabbayaanii shaghiiraa.', translation: 'Ya Tuhanku, ampunilah dosaku dan dosa kedua orang tuaku, dan kasihilah mereka keduanya sebagaimana mereka berdua telah mendidik aku di waktu kecil.' },
+        { id: 'h-8', title: 'Masuk Rumah', arabic: 'بِسْمِ اللَّهِ وَلَجْنَا وَبِسْمِ اللَّهِ خَرَجْنَا وَعَلَى اللَّهِ رَبِّنَا تَوَكَّلْنَا', latin: 'Bismillaahi walajnaa wa bismillaahi kharajnaa wa ‘alallaahi rabbinaa tawakkalnaa.', translation: 'Dengan nama Allah kami masuk, dengan nama Allah kami keluar, dan kepada Allah Tuhan kami, kami bertawakal.' },
+        { id: 'h-9', title: 'Keluar Rumah', arabic: 'بِسْمِ اللَّهِ تَوَكَّلْتُ عَلَى اللَّهِ لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ', latin: 'Bismillaahi tawakkaltu ‘alallaah, laa haula wa laa quwwata illa billaah.', translation: 'Dengan nama Allah, aku bertawakal kepada Allah. Tiada daya dan kekuatan kecuali dengan pertolongan Allah.' },
+        { id: 'h-10', title: 'Naik Kendaraan', arabic: 'سُبْحَانَ الَّذِي سَخَّرَ لَنَا هَذَا وَمَا كُنَّا لَهُ مُقْرِنِينَ وَإِنَّا إِلَى رَبِّنَا لَمُنقَلِبُونَ', latin: 'Subhaanalladzi sakhkhara lanaa haadzaa wa maa kunnaa lahu muqriniin wa innaa ilaa rabbinaa lamunqalibuun.', translation: 'Maha Suci Allah yang telah menundukkan kendaraan ini untuk kami, padahal kami sebelumnya tidak mampu menguasainya, dan sesungguhnya kami akan kembali kepada Tuhan kami.' },
+        { id: 'h-11', title: 'Masuk Kamar Mandi', arabic: 'اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْخُبُثِ وَالْخَبَائِثِ', latin: 'Allahumma inni a’uudzu bika minal khubutsi wal khabaa-its.', translation: 'Ya Allah, aku berlindung kepada-Mu dari godaan setan laki-laki dan perempuan.' },
+        { id: 'h-12', title: 'Keluar Kamar Mandi', arabic: 'غُفْرَانَكَ', latin: 'Ghufraanaka.', translation: 'Aku memohon ampunan-Mu.' },
+        { id: 'h-13', title: 'Memakai Pakaian', arabic: 'الْحَمْدُ لِلَّهِ الَّذِي كَسَانِي هَذَا الثَّوْبَ وَرَزَقَنِيهِ مِنْ غَيْرِ حَوْلٍ مِنِّي وَلَا قُوَّةٍ', latin: 'Alhamdu lillaahil ladzii kasaanii haadzats tsauba wa razaqaniihi min ghairi haulin minnii wa laa quwwah.', translation: 'Segala puji bagi Allah yang telah memberiku pakaian ini dan memberikannya kepadaku tanpa daya dan kekuatanku.' },
+        { id: 'h-14', title: 'Bercermin', arabic: 'اللَّهُمَّ كَمَا أَحْسَنْتَ خَلْقِي فَأَحْسِنْ خُلُقِي', latin: 'Allahumma kamaa ahsanta khalqii fa ahsin khuluqii.', translation: 'Ya Allah, sebagaimana Engkau telah membaguskan rupaku, maka baguskanlah akhlakku.' },
+        { id: 'h-15', title: 'Ketika Hujan Turun', arabic: 'اللَّهُمَّ صَيِّبًا نَافِعًا', latin: 'Allahumma shayyiban naafi’an.', translation: 'Ya Allah, jadikanlah hujan ini hujan yang bermanfaat.' }
     ]
 };
 
@@ -278,13 +286,13 @@ const DoaPage: React.FC = () => {
         }
     }, [handleCopy, showToast]);
 
-    const filteredCategories = categories.filter(c => 
+    const filteredCategories = categories.filter(c =>
         c.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const activeCategory = category ? categories.find(c => c.id === category) : null;
     const prayers = category ? (doaContent[category] || []) : [];
-    const filteredPrayers = prayers.filter(p => 
+    const filteredPrayers = prayers.filter(p =>
         p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.translation.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -311,7 +319,7 @@ const DoaPage: React.FC = () => {
                             <ChevronLeft size={24} />
                         </button>
                         {category && (
-                            <button 
+                            <button
                                 onClick={() => navigate('/doa')}
                                 className="text-[10px] font-black uppercase  bg-white/10 px-4 py-1.5 rounded-full backdrop-blur-md border border-white/10"
                             >
@@ -385,8 +393,8 @@ const DoaPage: React.FC = () => {
                         <div className={['asmaul', 'harian', 'sholat'].includes(category) ? "grid grid-cols-2 gap-3" : "space-y-3"}>
                             {filteredPrayers.length > 0 ? (
                                 filteredPrayers.map((doa) => (
-                                    <button 
-                                        key={doa.id} 
+                                    <button
+                                        key={doa.id}
                                         onClick={() => setSelectedDoa(doa)}
                                         className={`text-left bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-lg hover:border-primary-200 transition-all group ${['asmaul', 'harian', 'sholat'].includes(category) ? 'p-4' : 'p-6 w-full'}`}
                                     >
@@ -397,9 +405,9 @@ const DoaPage: React.FC = () => {
                                                 </div>
                                             )}
                                         </div>
-                                        
+
                                         <h3 className={`font-black text-slate-800 dark:text-white leading-tight group-hover:text-primary-700 transition-colors ${['asmaul', 'harian', 'sholat'].includes(category) ? 'text-sm mb-2 truncate' : 'text-lg mb-4'}`}>{doa.title}</h3>
-                                        
+
                                         <div className={`bg-slate-50 dark:bg-slate-800/50 rounded-2xl ${['asmaul', 'harian', 'sholat'].includes(category) ? 'p-3' : 'p-5 mb-4'}`}>
                                             <p className={`font-serif text-slate-800 dark:text-primary-50 leading-relaxed text-right ${['asmaul', 'harian', 'sholat'].includes(category) ? 'text-lg overflow-hidden whitespace-nowrap overflow-ellipsis' : 'text-xl'}`} dir="rtl">
                                                 {doa.arabic}
@@ -408,7 +416,7 @@ const DoaPage: React.FC = () => {
                                                 {doa.latin}
                                             </p>
                                         </div>
-                                        
+
                                         {!['harian', 'sholat'].includes(category) && (
                                             <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-2">
                                                 {doa.translation}
@@ -471,13 +479,13 @@ const DoaPage: React.FC = () => {
 
                         {/* Modal Footer */}
                         <div className="p-6 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex gap-3 text-left">
-                            <button 
+                            <button
                                 onClick={() => handleCopy(selectedDoa)}
                                 className="flex-1 flex items-center justify-center gap-2 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-[10px] font-black uppercase hover:bg-primary-50 hover:text-primary-600 transition-all"
                             >
                                 <Copy size={16} /> Salin
                             </button>
-                            <button 
+                            <button
                                 onClick={() => handleShare(selectedDoa)}
                                 className="flex-1 flex items-center justify-center gap-2 py-4 bg-primary-600 text-white rounded-2xl text-[10px] font-black uppercase hover:bg-primary-700 shadow-lg shadow-primary-500/20 transition-all"
                             >

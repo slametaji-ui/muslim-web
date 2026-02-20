@@ -5,6 +5,7 @@ import { Search, MapPin, Loader2, Navigation, Sunrise, Sun, Moon, Volume2, Rotat
 import { format, isSameDay } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { useToast } from '../components/CustomToast';
+import { notificationService } from '../services/notificationService';
 
 interface HijriDateInfo {
     day: string;
@@ -45,7 +46,6 @@ const PrayerTimesPage: React.FC = () => {
     const [showAdzanModal, setShowAdzanModal] = useState(false);
     const [userName, setUserName] = useState(() => localStorage.getItem('muslim_app_user_name') || '');
     const [isAdzanEnabled, setIsAdzanEnabled] = useState(() => localStorage.getItem('muslim_app_adzan_enabled') === 'true');
-    const [showNameInput, setShowNameInput] = useState(!localStorage.getItem('muslim_app_user_name'));
     const [hijriOffset, setHijriOffset] = useState(() => Number(localStorage.getItem('muslim_app_hijri_offset')) || 0);
     const [madhab, setMadhab] = useState(() => localStorage.getItem('muslim_app_madhab') || 'shafi');
     const [theme, setTheme] = useState(() => (localStorage.getItem('theme') || 'light') as 'light' | 'dark');
@@ -57,7 +57,7 @@ const PrayerTimesPage: React.FC = () => {
         const saved = localStorage.getItem('muslim_app_tracker_history');
         return saved ? JSON.parse(saved) : {};
     });
-    
+
     const activityItems = [
         { id: 'subuh', label: 'Subuh', time: schedule?.jadwal.subuh, icon: <Sunrise size={20} />, category: 'wajib' },
         { id: 'dzuhur', label: 'Dzuhur', time: schedule?.jadwal.dzuhur, icon: <Sun size={20} />, category: 'wajib' },
@@ -77,7 +77,7 @@ const PrayerTimesPage: React.FC = () => {
     const toggleActivity = (id: string) => {
         setTrackerHistory(prev => {
             const current = prev[dateKey] || [];
-            const next = current.includes(id) 
+            const next = current.includes(id)
                 ? current.filter(item => item !== id)
                 : [...current, id];
             const updated = { ...prev, [dateKey]: next };
@@ -86,7 +86,7 @@ const PrayerTimesPage: React.FC = () => {
         });
     };
     const { showToast, ToastComponent } = useToast();
-    
+
     const [prayerStatus, setPrayerStatus] = useState<Record<string, boolean>>(() => {
         const saved = localStorage.getItem('muslim_app_prayer_status');
         if (saved) {
@@ -232,17 +232,19 @@ const PrayerTimesPage: React.FC = () => {
         try {
             const today = new Date();
             const dailyData = await api.getPrayerTimes(cityId, today, forceRefresh);
-            
+
             if (dailyData?.koordinat) {
                 const localOverride = api.getLocalPrayerTimes(
-                    dailyData.koordinat.lat, 
-                    dailyData.koordinat.lon, 
+                    dailyData.koordinat.lat,
+                    dailyData.koordinat.lon,
                     today,
                     calculationOptions
                 );
                 setSchedule(localOverride);
-            } else {
+                if (isAdzanEnabled) notificationService.scheduleAdhanNotifications(localOverride);
+            } else if (dailyData) {
                 setSchedule(dailyData);
+                if (isAdzanEnabled) notificationService.scheduleAdhanNotifications(dailyData);
             }
 
             const hijri = await api.getHijriDate(today);
@@ -258,7 +260,7 @@ const PrayerTimesPage: React.FC = () => {
         const today = format(new Date(), 'yyyy-MM-dd');
         const cacheKey = `muslim_app_doa_daily_${today}`;
         const cached = localStorage.getItem(cacheKey);
-        
+
         if (cached) {
             setDoaRandom(JSON.parse(cached));
             return;
@@ -304,11 +306,6 @@ const PrayerTimesPage: React.FC = () => {
         });
     };
 
-    const handleSaveName = (name: string) => {
-        setUserName(name);
-        localStorage.setItem('muslim_app_user_name', name);
-        setShowNameInput(false);
-    };
 
     const getTimeGreeting = () => {
         const hour = currentTime.getHours();
@@ -330,7 +327,7 @@ const PrayerTimesPage: React.FC = () => {
                 {/* Gradient Blobs */}
                 <div className="absolute top-[-10%] right-[-10%] w-[50%] aspect-square bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-[120px] animate-pulse"></div>
                 <div className="absolute bottom-[20%] left-[-10%] w-[40%] aspect-square bg-amber-500/5 dark:bg-amber-400/5 rounded-full blur-[100px]"></div>
-                
+
                 {/* Subtle Islamic Pattern Overlay */}
                 <div className="absolute inset-x-0 top-0 h-64 opacity-[0.06] dark:opacity-[0.1]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l15 15l-15 15l-15 -15z' fill='%23059669' fill-opacity='1' fill-rule='evenodd'/%3E%3C/svg%3E")`, backgroundSize: '60px 60px' }}></div>
             </div>
@@ -343,7 +340,7 @@ const PrayerTimesPage: React.FC = () => {
                         <br />
                         <span className="text-emerald-500 dark:text-emerald-400">Assalamualaikum {userName}</span>
                     </h2>
-                    <div className="flex flex-col gap-0.5 mt-2">
+                    {/* <div className="flex flex-col gap-0.5 mt-2">
                         <p className="text-[10px] font-bold text-slate-400 uppercase ">
                             {format(currentTime, 'EEEE, dd MMMM yyyy', { locale: id })}
                         </p>
@@ -355,16 +352,30 @@ const PrayerTimesPage: React.FC = () => {
                                 })()} {hijriDate.month.en} {hijriDate.year}H
                             </p>
                         )}
-                    </div>
+                    </div> */}
                 </div>
                 <div className="flex gap-2">
-                    <button 
-                        onClick={() => setIsAdzanEnabled(!isAdzanEnabled)}
+                    <button
+                        onClick={async () => {
+                            const nextState = !isAdzanEnabled;
+                            if (nextState) {
+                                const granted = await notificationService.requestPermission();
+                                if (!granted) {
+                                    showToast('Izin notifikasi diperlukan untuk mengaktifkan adzan', 'error');
+                                    return;
+                                }
+                                showToast('Notifikasi adzan diaktifkan!', 'success');
+                            } else {
+                                showToast('Notifikasi adzan dimatikan');
+                            }
+                            setIsAdzanEnabled(nextState);
+                            localStorage.setItem('muslim_app_adzan_enabled', nextState.toString());
+                        }}
                         className={`p-3 rounded-2xl transition-all ${isAdzanEnabled ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30' : 'bg-slate-50 text-slate-400 dark:bg-slate-800'}`}
                     >
                         <Volume2 size={20} />
                     </button>
-                    <button 
+                    <button
                         onClick={() => navigate('/profile')}
                         className="bg-amber-500 text-white p-3 rounded-2xl shadow-lg shadow-amber-200 dark:shadow-none transition-all flex items-center justify-center hover:bg-amber-600 active:scale-90"
                     >
@@ -380,15 +391,15 @@ const PrayerTimesPage: React.FC = () => {
                     <div className="absolute -top-24 -right-24 w-64 h-64 bg-amber-500/10 rounded-full blur-[80px] group-hover:bg-amber-500/20 transition-all duration-1000"></div>
                     <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-emerald-400/10 rounded-full blur-[80px] group-hover:bg-emerald-400/20 transition-all duration-1000"></div>
                     <div className="absolute top-0 right-0 p-8 opacity-5 text-white pointer-events-none">
-                        <MoonStar size={150} />
+                        <MoonStar size={380} />
                     </div>
-                    
+
                     {/* Header: Location & Date - Responsive Layout */}
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10 relative z-10">
-                         <div className="flex flex-col gap-1.5 overflow-hidden">
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 backdrop-blur-md rounded-2xl border border-white/10 w-fit">
+                        <div className="flex flex-col gap-1.5 overflow-hidden">
+                            <div className="flex items-center  gap-1.5 px-3 py-1.5 bg-white/10 backdrop-blur-md rounded-2xl border border-white/10 w-fit">
                                 <MapPin size={10} className="text-amber-400 flex-shrink-0" />
-                                <span className="text-[9px] font-black text-white/80 uppercase tracking-widest truncate max-w-[120px]">{city?.lokasi || 'Mencari...'}</span>
+                                <span className="text-[9px] font-black text-white/80 uppercase tracking-widest">{city?.lokasi || 'Mencari...'}</span>
                             </div>
                             {hijriDate && (
                                 <p className="text-[10px] font-bold text-emerald-300/80 uppercase tracking-tight pl-1">
@@ -399,15 +410,15 @@ const PrayerTimesPage: React.FC = () => {
                                 </p>
                             )}
                         </div>
-                        
+
                         <div className="flex flex-col items-start sm:items-end gap-1 w-full sm:w-auto">
-                             <div className="bg-amber-500/20 backdrop-blur-md px-4 py-2 rounded-2xl border border-amber-500/20 flex flex-col items-start sm:items-end min-w-[120px] w-full sm:w-auto">
-                                 <p className="text-[7px] font-black text-amber-400 uppercase tracking-widest leading-none mb-1.5 opacity-60">Selanjutnya</p>
-                                 <div className="flex items-baseline gap-2">
-                                     <span className="text-[10px] font-black text-white uppercase truncate">{nextPrayer?.name}</span>
-                                     <span className="text-[11px] font-black text-amber-400 tabular-nums">{countdown}</span>
-                                 </div>
-                             </div>
+                            <div className="bg-amber-500/20 backdrop-blur-md px-4 py-2 rounded-2xl border border-amber-500/20 flex flex-col items-start sm:items-end min-w-[120px] w-full sm:w-auto">
+                                <p className="text-[7px] font-black text-amber-400 uppercase tracking-widest leading-none mb-1.5 opacity-60">Selanjutnya</p>
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-[10px] font-black text-white uppercase truncate">{nextPrayer?.name}</span>
+                                    <span className="text-[11px] font-black text-amber-400 tabular-nums">{countdown}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -429,7 +440,7 @@ const PrayerTimesPage: React.FC = () => {
                             { label: 'Terbit', time: schedule?.jadwal.terbit, icon: <Sunrise size={12} />, primary: true },
                             { label: 'Dhuha', time: schedule?.jadwal.dhuha, icon: <Sun size={12} /> },
                         ].map((item, idx) => (
-                            <div 
+                            <div
                                 key={idx}
                                 className={`flex flex-col items-center p-3 rounded-2xl border transition-all duration-500 ${item.primary ? 'bg-white/10 border-white/20 shadow-lg scale-105' : 'bg-black/20 border-white/5'}`}
                             >
@@ -463,9 +474,9 @@ const PrayerTimesPage: React.FC = () => {
                         { to: '/schedule', icon: <Clock className="text-indigo-500" size={24} />, label: 'Jadwal' },
                         { to: '/profile', icon: <User className="text-slate-500" size={24} />, label: 'Profil' },
                     ].map((item, idx) => (
-                        <Link 
-                            key={idx} 
-                            to={item.to} 
+                        <Link
+                            key={idx}
+                            to={item.to}
                             className="flex flex-col items-center gap-2 group active:scale-95 transition-all"
                         >
                             <div className="w-14 h-14 bg-white dark:bg-slate-900 rounded-[1.25rem] shadow-sm border border-slate-100 dark:border-slate-800 flex items-center justify-center group-hover:shadow-md group-hover:-translate-y-1 transition-all">
@@ -486,7 +497,7 @@ const PrayerTimesPage: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl border border-emerald-100 dark:border-emerald-800/50 shadow-sm">
                         <div className="relative w-8 h-8">
-                             <svg className="w-full h-full -rotate-90">
+                            <svg className="w-full h-full -rotate-90">
                                 <circle cx="16" cy="16" r="14" fill="transparent" stroke="currentColor" strokeWidth="3" className="text-emerald-100 dark:text-emerald-900/50" />
                                 <circle cx="16" cy="16" r="14" fill="transparent" stroke="currentColor" strokeWidth="3" className="text-emerald-500" strokeDasharray={87.96} strokeDashoffset={87.96 - (87.96 * (todayDone.length / activityItems.length))} strokeLinecap="round" />
                             </svg>
@@ -506,7 +517,7 @@ const PrayerTimesPage: React.FC = () => {
                             {activityItems.map((item) => {
                                 const done = todayDone.includes(item.id);
                                 return (
-                                    <button 
+                                    <button
                                         key={item.id}
                                         onClick={() => toggleActivity(item.id)}
                                         className={`w-full flex items-center justify-between p-4 rounded-[2rem] transition-all ${done ? 'bg-emerald-50/50 dark:bg-emerald-900/20' : 'hover:bg-slate-50 dark:hover:bg-slate-900'}`}
@@ -535,7 +546,7 @@ const PrayerTimesPage: React.FC = () => {
             {/* Doa Hari Ini Card - Relocated to Bottom */}
             {doaRandom && (
                 <div className="max-w-md mx-auto px-6 mb-12">
-                     <div className="relative group">
+                    <div className="relative group">
                         <div className="absolute -inset-1 bg-gradient-to-r from-amber-500 to-amber-600 rounded-[2.6rem] blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
                         <div className="relative bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
                             <div className="absolute top-0 right-0 p-4 opacity-[0.03] text-amber-600 rotate-12 group-hover:scale-110 transition-transform duration-700">
@@ -549,11 +560,11 @@ const PrayerTimesPage: React.FC = () => {
                                     <h3 className="font-black text-slate-800 dark:text-white uppercase tracking-tight text-base leading-tight">{doaRandom.judul}</h3>
                                     <div className="h-1 w-12 bg-amber-500 rounded-full"></div>
                                 </div>
-                                
+
                                 <p className="font-serif text-3xl text-slate-800 dark:text-amber-50 leading-loose text-right" dir="rtl">
                                     {doaRandom.doa}
                                 </p>
-                                
+
                                 <div className="space-y-3 p-5 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-slate-100 dark:border-slate-800">
                                     <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest leading-relaxed">Artinya:</p>
                                     <p className="text-xs text-slate-600 dark:text-slate-300 italic font-medium leading-relaxed">
@@ -565,11 +576,11 @@ const PrayerTimesPage: React.FC = () => {
                                     <Link to="/doa" className="px-5 py-2.5 bg-slate-100 dark:bg-slate-800 rounded-full text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2 hover:bg-amber-500 hover:text-white transition-all">
                                         Koleksi Doa <ChevronRight size={14} />
                                     </Link>
-                                    <button 
+                                    <button
                                         onClick={() => {
                                             navigator.clipboard.writeText(`${doaRandom.judul}\n\n${doaRandom.doa}\n\n${doaRandom.artinya}`);
                                             showToast('Doa berhasil disalin!');
-                                        }} 
+                                        }}
                                         className="w-12 h-12 bg-amber-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-amber-500/20 hover:bg-amber-600 active:scale-95 transition-all"
                                     >
                                         <Copy size={20} />
@@ -582,15 +593,7 @@ const PrayerTimesPage: React.FC = () => {
             )}
 
             {/* Adzan Alert & Name Input (Styling updated but logic remains) */}
-            {showNameInput && (
-                <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-sm">
-                    <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 w-full max-w-sm shadow-2xl">
-                        <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-2 tracking-tight">Ahlan wa Sahlan</h2>
-                        <input type="text" placeholder="Siapa nama Anda?" className="w-full px-5 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 mb-6 font-bold outline-none focus:border-amber-500 transition-colors" onKeyDown={(e) => {if (e.key === 'Enter') handleSaveName((e.target as HTMLInputElement).value);}} />
-                        <button onClick={() => {const val = (document.querySelector('input') as HTMLInputElement).value; if (val) handleSaveName(val);}} className="w-full bg-emerald-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-emerald-200 dark:shadow-none">Lanjutkan</button>
-                    </div>
-                </div>
-            )}
+            {/* Adzan Alert */}
         </div>
     );
 };

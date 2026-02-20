@@ -17,25 +17,30 @@ const WomenHealthPage: React.FC = () => {
     const [isMenstruating, setIsMenstruating] = useState(() => localStorage.getItem('muslim_app_is_menstruating') === 'true');
     const [periodDuration, setPeriodDuration] = useState(() => Number(localStorage.getItem('muslim_app_period_duration')) || 7);
     const [periodStartDate, setPeriodStartDate] = useState(() => localStorage.getItem('muslim_app_period_start_date') || '');
+    const [customStartDate, setCustomStartDate] = useState(format(new Date(), 'yyyy-MM-dd'));
     const [showSettings, setShowSettings] = useState(false);
 
     // --- State for Fasting Debts ---
     const [fastDebts, setFastDebts] = useState<FastDebt[]>(() => {
         const saved = localStorage.getItem('muslim_app_fast_debts');
-        return saved ? JSON.parse(saved) : [{ id: '1', year: 1446, days: 7, paid: 0 }];
+        const defaultDebt = [{ id: '1', year: 1446, days: 0, paid: 0 }];
+        return saved ? JSON.parse(saved) : defaultDebt;
     });
 
     // --- Effects for Persistence ---
     useEffect(() => {
         localStorage.setItem('muslim_app_is_menstruating', String(isMenstruating));
+        if (isMenstruating) syncRamadanFastDebts();
     }, [isMenstruating]);
 
     useEffect(() => {
         localStorage.setItem('muslim_app_period_duration', String(periodDuration));
+        if (isMenstruating) syncRamadanFastDebts();
     }, [periodDuration]);
 
     useEffect(() => {
         localStorage.setItem('muslim_app_period_start_date', periodStartDate);
+        if (isMenstruating) syncRamadanFastDebts();
     }, [periodStartDate]);
 
     useEffect(() => {
@@ -43,9 +48,45 @@ const WomenHealthPage: React.FC = () => {
     }, [fastDebts]);
 
     // --- Logic for Tracking ---
+    const syncRamadanFastDebts = () => {
+        const ramadanStartStr = localStorage.getItem('muslim_app_ramadan_start');
+        if (!ramadanStartStr || !periodStartDate) return;
+
+        const ramadanStart = startOfDay(new Date(ramadanStartStr));
+        const ramadanEnd = addDays(ramadanStart, 29); // 30 days total
+
+        const periodStart = startOfDay(new Date(periodStartDate));
+        const periodEnd = addDays(periodStart, periodDuration - 1);
+
+        // Calculate overlap
+        const overlapStart = isAfter(periodStart, ramadanStart) ? periodStart : ramadanStart;
+        const overlapEnd = isAfter(periodEnd, ramadanEnd) ? ramadanEnd : periodEnd;
+
+        if (isAfter(overlapStart, overlapEnd)) return; // No overlap
+
+        const overlapDays = differenceInDays(overlapEnd, overlapStart) + 1;
+
+        // Update fastDebts for the year (simplified to 1447H as per current project context or extract from date)
+        const year = 1447; // Defaulting to the next Ramadan cycle year from previous tasks
+
+        setFastDebts(prev => {
+            const existingIndex = prev.findIndex(d => d.year === year);
+            if (existingIndex > -1) {
+                const updated = [...prev];
+                // Only update if the overlap is greater than current recorded debt to avoid losing manual edits
+                // or just replace if we want total sync. Let's do a smart sync.
+                if (updated[existingIndex].days < overlapDays) {
+                    updated[existingIndex] = { ...updated[existingIndex], days: overlapDays };
+                }
+                return updated;
+            } else {
+                return [{ id: Date.now().toString(), year, days: overlapDays, paid: 0 }, ...prev];
+            }
+        });
+    };
+
     const handleStartPeriod = () => {
-        const today = format(new Date(), 'yyyy-MM-dd');
-        setPeriodStartDate(today);
+        setPeriodStartDate(customStartDate);
         setIsMenstruating(true);
     };
 
@@ -96,16 +137,16 @@ const WomenHealthPage: React.FC = () => {
                     <p className="text-primary-100 text-xs font-black uppercase  opacity-80 mt-1">Kesehatan & Ibadah</p>
                 </div>
             </div>
-            
+
             <div className="max-w-md mx-auto px-6 pt-6">
-                
+
                 {/* 1. Enhanced Menstruation Section */}
                 <div className="mb-8">
                     <div className="flex items-center justify-between mb-4 px-1">
                         <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase  flex items-center gap-2">
-                             <Droplets size={16} className="text-rose-500" /> Pelacak Haid
+                            <Droplets size={16} className="text-rose-500" /> Pelacak Haid
                         </h3>
-                        <button 
+                        <button
                             onClick={() => setShowSettings(!showSettings)}
                             className="p-2 hover:bg-white dark:hover:bg-slate-900 rounded-xl transition-all text-slate-400"
                         >
@@ -121,7 +162,7 @@ const WomenHealthPage: React.FC = () => {
                                     <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">Durasi Haid Rata-rata (Hari)</label>
                                     <div className="flex items-center gap-3">
                                         {[5, 6, 7, 8, 9, 10].map(d => (
-                                            <button 
+                                            <button
                                                 key={d}
                                                 onClick={() => setPeriodDuration(d)}
                                                 className={`w-10 h-10 rounded-xl font-black text-xs transition-all ${periodDuration === d ? 'bg-rose-500 text-white shadow-lg' : 'bg-slate-50 dark:bg-slate-800 text-slate-400'}`}
@@ -136,7 +177,7 @@ const WomenHealthPage: React.FC = () => {
                     <div className={`p-8 rounded-[3rem] transition-all duration-500 relative overflow-hidden shadow-2xl ${isMenstruating ? 'bg-gradient-to-br from-rose-500 to-rose-600 text-white shadow-rose-200 dark:shadow-none' : 'bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-800 dark:text-white'}`}>
                         {/* Motif Backdrop */}
                         <div className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl opacity-20 -mr-10 -mt-10 bg-white"></div>
-                        
+
                         <div className="relative z-10">
                             <div className="flex justify-between items-start mb-6">
                                 <div>
@@ -156,12 +197,12 @@ const WomenHealthPage: React.FC = () => {
                                         </div>
                                         {estEndDate && (
                                             <div className="text-[10px] font-bold opacity-80 uppercase  text-right">
-                                                Estimasi Selesai:<br/>{format(estEndDate, 'dd MMM yyyy', { locale: id })}
+                                                Estimasi Selesai:<br />{format(estEndDate, 'dd MMM yyyy', { locale: id })}
                                             </div>
                                         )}
                                     </div>
                                     <div className="h-3 bg-white/20 rounded-full overflow-hidden">
-                                        <div 
+                                        <div
                                             className="h-full bg-white rounded-full transition-all duration-1000"
                                             style={{ width: `${progress}%` }}
                                         ></div>
@@ -169,16 +210,30 @@ const WomenHealthPage: React.FC = () => {
                                 </div>
                             )}
 
-                            <div className="flex gap-3">
+                            <div className="flex flex-col gap-4">
                                 {!isMenstruating ? (
-                                    <button 
-                                        onClick={handleStartPeriod}
-                                        className="flex-1 py-4 bg-rose-500 text-white rounded-2xl font-black text-[10px] uppercase  shadow-xl shadow-rose-100 dark:shadow-none hover:bg-rose-600 transition-all active:scale-95"
-                                    >Mulai Haid Sekarang</button>
+                                    <>
+                                        <div className="flex flex-col gap-2">
+                                            <label className="text-[10px] font-black text-rose-300 uppercase  px-1">Kapan haid mulai?</label>
+                                            <input
+                                                type="date"
+                                                value={customStartDate}
+                                                onChange={(e) => setCustomStartDate(e.target.value)}
+                                                className="w-full px-5 py-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-800 dark:text-white font-bold text-xs focus:ring-2 focus:ring-rose-400 outline-none transition-all shadow-inner"
+                                            />
+                                        </div>
+                                        <button
+                                            onClick={handleStartPeriod}
+                                            className="w-full py-5 bg-rose-500 text-white rounded-2xl font-black text-[10px] uppercase  shadow-xl shadow-rose-200 dark:shadow-none hover:bg-rose-600 transition-all active:scale-95 flex items-center justify-center gap-2"
+                                        >
+                                            <Plus size={18} />
+                                            Mulai Pelacakan
+                                        </button>
+                                    </>
                                 ) : (
-                                    <button 
+                                    <button
                                         onClick={handleStopPeriod}
-                                        className="flex-1 py-4 bg-white text-rose-600 rounded-2xl font-black text-[10px] uppercase  shadow-xl hover:bg-rose-50 transition-all active:scale-95"
+                                        className="w-full py-5 bg-white text-rose-600 rounded-2xl font-black text-[10px] uppercase  shadow-xl hover:bg-rose-50 transition-all active:scale-95 border border-rose-100"
                                     >Sudah Selesai / Suci</button>
                                 )}
                             </div>
@@ -193,7 +248,7 @@ const WomenHealthPage: React.FC = () => {
                             <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase ">Qadha Puasa Ramadan</h3>
                             <p className="text-[10px] text-slate-400 font-bold uppercase  mt-0.5">Pantau tanggungan puasa Anda</p>
                         </div>
-                        <button 
+                        <button
                             onClick={addDebtYear}
                             className="p-3 bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-2xl hover:bg-primary-100 transition-all border border-primary-100 dark:border-primary-800 shadow-sm"
                         >
@@ -230,7 +285,7 @@ const WomenHealthPage: React.FC = () => {
                                         <span className="text-xs font-black text-slate-800 dark:text-white tabular-nums">{debt.paid} <span className="text-slate-400 font-bold">/ {debt.days} Hari</span></span>
                                     </div>
                                     <div className="h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                        <div 
+                                        <div
                                             className="h-full bg-gradient-to-r from-primary-500 to-primary-600 rounded-full transition-all duration-1000 shadow-md shadow-primary-500/20"
                                             style={{ width: `${(debt.paid / debt.days) * 100}%` }}
                                         ></div>
@@ -238,16 +293,16 @@ const WomenHealthPage: React.FC = () => {
                                 </div>
 
                                 <div className="flex gap-2">
-                                    <button 
+                                    <button
                                         onClick={() => updatePaidDays(debt.id, -1)}
                                         className="flex-1 py-3 bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-400 dark:text-slate-500 font-black text-[10px] uppercase  border border-slate-100 dark:border-slate-700 active:scale-95 transition-all"
                                     >-1 Hari</button>
-                                    <button 
+                                    <button
                                         onClick={() => updatePaidDays(debt.id, 1)}
                                         disabled={debt.paid >= debt.days}
                                         className={`flex-[2] py-3 rounded-xl font-black text-[10px] uppercase  transition-all active:scale-95 shadow-lg shadow-primary-500/10 ${debt.paid >= debt.days ? 'bg-slate-100 text-slate-300' : 'bg-primary-600 text-white'}`}
                                     >Sudah Dibayar</button>
-                                    <button 
+                                    <button
                                         onClick={() => setFastDebts(prev => prev.filter(d => d.id !== debt.id))}
                                         className="p-3 text-slate-300 hover:text-rose-500 transition-all active:scale-95"
                                     >
