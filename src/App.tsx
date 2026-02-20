@@ -12,6 +12,8 @@ import QiblaPage from './pages/QiblaPage';
 import TasbihPage from './pages/TasbihPage';
 import SchedulePage from './pages/SchedulePage';
 import ProfilePage from './pages/ProfilePage';
+import HadithPage from './pages/HadithPage';
+import TrackerPage from './pages/TrackerPage';
 
 import RamadanPage from './pages/RamadanPage';
 import ZakatCalculatorPage from './pages/ZakatCalculatorPage';
@@ -38,6 +40,8 @@ function App() {
                     <Route path="/muslimah" element={<WomenHealthPage />} />
                     <Route path="/doa" element={<DoaPage />} />
                     <Route path="/doa/:category" element={<DoaPage />} />
+                    <Route path="/hadith" element={<HadithPage />} />
+                    <Route path="/tracker" element={<TrackerPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
                 </Routes>
             </Layout>

@@ -1,0 +1,13 @@
+services:
+  qolbi-app:
+    build: .
+    container_name: qolbi-app
+    restart: always
+    networks:
+      - web-network
+    expose:
+      - "5173"
+
+networks:
+  web-network:
+    external: true

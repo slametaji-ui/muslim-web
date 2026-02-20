@@ -17,7 +17,16 @@ import {
     Clock,
     RotateCw,
     Trash2,
-    ChevronRight
+    ChevronRight,
+    Info,
+    ShieldCheck,
+    Share2,
+    Smartphone,
+    Heart,
+    ExternalLink,
+    X,
+    Sparkles,
+    Download
 } from 'lucide-react';
 import { api, City } from '../services/api';
 
@@ -32,6 +41,11 @@ const ProfilePage: React.FC = () => {
     const [locating, setLocating] = useState(false);
     const [city, setCity] = useState<City | null>(() => api.getLastCity());
     const [showSuccess, setShowSuccess] = useState(false);
+    const [showAbout, setShowAbout] = useState(false);
+    const [showPrivacy, setShowPrivacy] = useState(false);
+    const [showDonation, setShowDonation] = useState(false);
+    const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+    const [isPwaInstalled, setIsPwaInstalled] = useState(false);
 
     useEffect(() => {
         const isDark = theme === 'dark';
@@ -94,6 +108,48 @@ const ProfilePage: React.FC = () => {
             );
         } else {
             setLocating(false);
+        }
+    };
+
+    useEffect(() => {
+        const handler = (e: any) => {
+            e.preventDefault();
+            setDeferredPrompt(e);
+        };
+        window.addEventListener('beforeinstallprompt', handler);
+        
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+        setIsPwaInstalled(isStandalone);
+
+        window.addEventListener('appinstalled', () => {
+             setIsPwaInstalled(true);
+        });
+
+        return () => window.removeEventListener('beforeinstallprompt', handler);
+    }, []);
+
+    const handleInstallPWA = async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') setDeferredPrompt(null);
+    };
+
+    const handleShare = async () => {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'Qolbi - Pendamping Muslim Modern',
+                    text: 'Yuk install aplikasi Qolbi untuk menemani ibadah harianmu!',
+                    url: window.location.origin,
+                });
+            } catch (err) {
+                console.error("Share failed", err);
+            }
+        } else {
+            // Fallback: Copy to clipboard
+            navigator.clipboard.writeText(window.location.origin);
+            alert('Link aplikasi disalin ke klibor!');
         }
     };
 
@@ -268,9 +324,171 @@ const ProfilePage: React.FC = () => {
                         )}
                     </button>
                 </div>
+
+                {/* New Section: App Info & Support */}
+                <div className="mt-8 space-y-4">
+                    <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-6">Informasi & Dukungan</h2>
+                    
+                    <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-2 shadow-xl border border-slate-100 dark:border-slate-800 transition-colors">
+                        <ProfileMenuItem 
+                            icon={<Info size={18} className="text-blue-500" />} 
+                            label="Tentang Aplikasi" 
+                            onClick={() => setShowAbout(true)} 
+                        />
+                        <ProfileMenuItem 
+                            icon={<ShieldCheck size={18} className="text-emerald-500" />} 
+                            label="Kebijakan Privasi" 
+                            onClick={() => setShowPrivacy(true)} 
+                        />
+                        <ProfileMenuItem 
+                            icon={<Share2 size={18} className="text-purple-500" />} 
+                            label="Bagikan Aplikasi" 
+                            onClick={handleShare} 
+                        />
+                        {!isPwaInstalled && deferredPrompt && (
+                            <ProfileMenuItem 
+                                icon={<Download size={18} className="text-orange-500" />} 
+                                label="Pasang Aplikasi (PWA)" 
+                                onClick={handleInstallPWA} 
+                            />
+                        )}
+                        <div className="mt-2 pt-2 border-t border-slate-50 dark:border-slate-800">
+                             <button 
+                                onClick={() => setShowDonation(true)}
+                                className="w-full flex items-center gap-4 p-4 rounded-3xl hover:bg-rose-50 dark:hover:bg-rose-900/10 transition-all group"
+                             >
+                                <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-900/30 flex items-center justify-center text-rose-500 group-hover:scale-110 transition-transform">
+                                    <Heart size={20} fill="currentColor" />
+                                </div>
+                                <div className="flex-1 text-left">
+                                    <p className="text-sm font-black text-slate-800 dark:text-white">Donasi Pengembang</p>
+                                    <p className="text-[10px] font-bold text-rose-500 uppercase tracking-tight">Dukung Keberlanjutan App</p>
+                                </div>
+                                <ChevronRight size={18} className="text-slate-300" />
+                             </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-12 text-center pb-8">
+                     <p className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.3em]">Qolbi v2.1.0</p>
+                     <p className="text-[8px] font-bold text-slate-200 dark:text-slate-700 uppercase mt-1">Slamedia Creative Studio</p>
+                </div>
             </div>
+
+            {/* Modals */}
+            {showAbout && (
+                <Modal onClose={() => setShowAbout(false)} title="Tentang Qolbi">
+                    <div className="space-y-4 text-slate-600 dark:text-slate-400 text-xs font-medium leading-relaxed">
+                        <div className="flex justify-center mb-6">
+                            <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-[2rem] flex items-center justify-center shadow-xl">
+                                <Sparkles size={40} className="text-white" />
+                            </div>
+                        </div>
+                        <p className="text-center font-black text-slate-800 dark:text-white uppercase tracking-widest text-[10px] mb-6">Pendamping Muslim Modern</p>
+                        <p>
+                            <span className="font-black text-emerald-600">Qolbi</span> adalah aplikasi pendamping ibadah muslim modern yang dirancang dengan estetika premium dan fitur yang lengkap untuk memudahkan rutinitas ibadah harian Anda.
+                        </p>
+                        <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl space-y-2">
+                            <div className="flex justify-between items-center">
+                                <span className="text-[10px] uppercase font-black text-slate-400">Versi</span>
+                                <span className="text-slate-800 dark:text-white font-black">2.1.0</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-[10px] uppercase font-black text-slate-400">Developer</span>
+                                <span className="text-slate-800 dark:text-white font-black">Slamedia Creative</span>
+                            </div>
+                        </div>
+                        <p>Developed with ❤️ to help Ummah stay connected with Allah.</p>
+                    </div>
+                </Modal>
+            )}
+
+            {showPrivacy && (
+                <Modal onClose={() => setShowPrivacy(false)} title="Kebijakan Privasi">
+                    <div className="space-y-4 text-slate-600 dark:text-slate-400 text-[10px] font-bold uppercase leading-relaxed text-left">
+                        <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-100 dark:border-emerald-800 mb-4">
+                             <p className="text-emerald-700 dark:text-emerald-400">Keamanan data Anda adalah prioritas kami.</p>
+                        </div>
+                        <p className="font-black text-slate-800 dark:text-white">1. Pengumpulan Data</p>
+                        <p>Aplikasi ini menyimpan preferensi Anda (nama, lokasi, tema) secara lokal di perangkat Anda (LocalStorage). Kami tidak menyimpan data pribadi Anda di server kami.</p>
+                        
+                        <p className="font-black text-slate-800 dark:text-white">2. Lokasi</p>
+                        <p>Izin lokasi digunakan hanya untuk menghitung jadwal sholat dan arah kiblat secara akurat di perangkat Anda.</p>
+                        
+                        <p className="font-black text-slate-800 dark:text-white">3. Pihak Ketiga</p>
+                        <p>Kami menggunakan API publik untuk mendapatkan data jadwal sholat dan Al-Quran. Data yang dikirimkan ke API tersebut hanyalah koordinat atau ID kota, bukan identitas Anda.</p>
+                    </div>
+                </Modal>
+            )}
+
+            {showDonation && (
+                <Modal onClose={() => setShowDonation(false)} title="Donasi Pengembang">
+                    <div className="text-center space-y-6">
+                        <div className="p-4 bg-white rounded-3xl shadow-inner border border-slate-100 flex flex-col items-center">
+                            <img 
+                                src="/qris.jpeg" 
+                                alt="QRIS Donation" 
+                                className="w-full max-w-[240px] rounded-2xl mb-4"
+                                onError={(e) => {
+                                    (e.target as any).src = 'https://placehold.co/400x400?text=QRIS+Internal+Error';
+                                }}
+                            />
+                            <div className="space-y-1">
+                                <p className="text-sm font-black text-slate-800 uppercase tracking-tight">garpela by slamedia creative</p>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Pindai kode QR di atas untuk berdonasi</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 p-4 bg-rose-50 dark:bg-rose-900/10 rounded-2xl text-left border border-rose-100 dark:border-rose-900/30">
+                            <div className="w-10 h-10 bg-rose-500 text-white rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
+                                <Heart size={20} fill="currentColor" />
+                            </div>
+                            <p className="text-[10px] font-black text-rose-800 dark:text-rose-400 uppercase leading-snug">
+                                Setiap kontribusi sangat berarti bagi pengembangan fitur & pemeliharaan server aplikasi ini. Terima kasih!
+                            </p>
+                        </div>
+                    </div>
+                </Modal>
+            )}
         </div>
     );
 };
+
+const ProfileMenuItem = ({ icon, label, onClick }: { icon: React.ReactNode, label: string, onClick: () => void }) => (
+    <button 
+        onClick={onClick}
+        className="w-full flex items-center gap-4 p-4 rounded-3xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all group"
+    >
+        <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center group-hover:scale-110 transition-transform">
+            {icon}
+        </div>
+        <span className="flex-1 text-sm font-black text-slate-800 dark:text-white text-left">{label}</span>
+        <ChevronRight size={18} className="text-slate-300" />
+    </button>
+);
+
+const Modal = ({ children, onClose, title }: { children: React.ReactNode, onClose: () => void, title: string }) => (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
+        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose}></div>
+        <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[3rem] p-8 shadow-2xl relative z-10 animate-in zoom-in-95 duration-500 overflow-hidden">
+            <div className="flex items-center justify-between mb-8">
+                <h3 className="text-xl font-black text-slate-800 dark:text-white tracking-tight uppercase">{title}</h3>
+                <button 
+                    onClick={onClose}
+                    className="w-10 h-10 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
+                >
+                    <X size={20} />
+                </button>
+            </div>
+            {children}
+            <button 
+                onClick={onClose}
+                className="w-full mt-8 py-2 text-slate-400 dark:text-slate-500 font-black text-[10px] uppercase tracking-widest"
+            >
+                Tutup
+            </button>
+        </div>
+    </div>
+);
 
 export default ProfilePage;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { RotateCcw, Target, Volume2, VolumeX, Fingerprint, ChevronLeft, ChevronRight, List, Library, CheckCircle2, ChevronLeft as BackIcon } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { RotateCcw, Target, Volume2, VolumeX, Fingerprint, ChevronLeft, ChevronRight, List, Library, CheckCircle2, ChevronLeft as BackIcon, Sparkles } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface DzikirItem {
     id: string;
@@ -58,6 +58,8 @@ const TasbihPage: React.FC = () => {
         return localStorage.getItem('muslim_app_tasbih_sound') !== 'false';
     });
     const [showDzikirList, setShowDzikirList] = useState(false);
+    const [showTargetReach, setShowTargetReach] = useState(false);
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
 
     const currentDzikir = DZIKIR_LIST[dzikirIndex];
 
@@ -70,42 +72,54 @@ const TasbihPage: React.FC = () => {
     }, [isSoundOn]);
 
     const handleIncrement = () => {
-        if (target > 0 && count >= target) {
-            if ('vibrate' in navigator) navigator.vibrate([100, 50, 100]);
+        const newCount = count + 1;
+        if (target > 0 && newCount === target) {
+            setCount(newCount);
+            setShowTargetReach(true);
+            if ('vibrate' in navigator) navigator.vibrate([100, 50, 100, 50, 100]);
+            playTapticFeedback();
+        } else if (target > 0 && newCount > target) {
             setCount(1);
-        } else {
-            setCount((prev: number) => prev + 1);
             if ('vibrate' in navigator) navigator.vibrate(50);
-            
-            if (isSoundOn) {
-                try {
-                    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-                    const oscillator = audioCtx.createOscillator();
-                    const gainNode = audioCtx.createGain();
+        } else {
+            setCount(newCount);
+            if ('vibrate' in navigator) navigator.vibrate(50);
+            playTapticFeedback();
+        }
+    };
 
-                    oscillator.type = 'sine';
-                    oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
-                    gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+    const playTapticFeedback = () => {
+        if (isSoundOn) {
+            try {
+                const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
 
-                    oscillator.connect(gainNode);
-                    gainNode.connect(audioCtx.destination);
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
 
-                    oscillator.start();
-                    oscillator.stop(audioCtx.currentTime + 0.1);
-                    
-                    setTimeout(() => audioCtx.close(), 150);
-                } catch (e) {
-                    console.error('Audio feedback error:', e);
-                }
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.1);
+                
+                setTimeout(() => audioCtx.close(), 150);
+            } catch (e) {
+                console.error('Audio feedback error:', e);
             }
         }
     };
 
     const handleReset = () => {
-        if (window.confirm('Reset hitungan?')) {
-            setCount(0);
-        }
+        setShowResetConfirm(true);
+    };
+
+    const confirmReset = () => {
+        setCount(0);
+        setShowResetConfirm(false);
     };
 
     const nextDzikir = () => {
@@ -128,7 +142,7 @@ const TasbihPage: React.FC = () => {
     return (
         <div className="max-w-md mx-auto w-full h-[100dvh] select-none flex flex-col bg-slate-50 dark:bg-slate-950 overflow-hidden transition-colors">
             {/* Premium Header */}
-            <div className="bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-600 pt-12 pb-6 px-6 rounded-b-[2.5rem] shadow-lg text-white text-center relative overflow-hidden flex-shrink-0">
+            <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-900 pt-12 pb-6 px-6 rounded-b-[2.5rem] shadow-lg text-white text-center relative overflow-hidden flex-shrink-0">
                 <div className="absolute top-0 right-0 p-4 opacity-10 rotate-12">
                     <Fingerprint size={120} />
                 </div>
@@ -263,6 +277,63 @@ const TasbihPage: React.FC = () => {
                         >
                             Tutup
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Target Reached Modal */}
+            {showTargetReach && (
+                <div className="fixed inset-0 z-[120] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-300">
+                    <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[3rem] p-8 text-center shadow-2xl animate-in zoom-in-95 duration-500 relative overflow-hidden">
+                        <div className="absolute -top-12 -right-12 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl"></div>
+                        <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl"></div>
+                        
+                        <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 rounded-[2rem] flex items-center justify-center mx-auto mb-6 text-emerald-600 dark:text-emerald-400">
+                            <Sparkles size={40} className="animate-pulse" />
+                        </div>
+                        
+                        <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-2 tracking-tight">Masha Allah!</h2>
+                        <p className="text-slate-500 dark:text-slate-400 text-xs font-medium px-4 leading-relaxed mb-8">
+                            Anda telah mencapai target <span className="text-emerald-500 font-black">{target}x</span> dzikir. Semoga Allah menerima amalan Anda.
+                        </p>
+                        
+                        <button 
+                            onClick={() => setShowTargetReach(false)}
+                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-2xl shadow-lg shadow-emerald-500/20 active:scale-95 transition-all uppercase text-[10px] tracking-widest"
+                        >
+                            Lanjutkan Dzikir
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Reset Confirmation Modal */}
+            {showResetConfirm && (
+                <div className="fixed inset-0 z-[120] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-300">
+                    <div className="bg-white dark:bg-slate-900 w-full max-w-xs rounded-[2.5rem] p-8 text-center shadow-2xl animate-in zoom-in-95 duration-300">
+                        <div className="w-16 h-16 bg-rose-50 dark:bg-rose-900/20 rounded-2xl flex items-center justify-center mx-auto mb-6 text-rose-500">
+                            <RotateCcw size={32} />
+                        </div>
+                        
+                        <h3 className="text-lg font-black text-slate-800 dark:text-white mb-2 tracking-tight">Reset Hitungan?</h3>
+                        <p className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-8">
+                            Tindakan ini tidak dapat dibatalkan.
+                        </p>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                            <button 
+                                onClick={() => setShowResetConfirm(false)}
+                                className="py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                            >
+                                Batal
+                            </button>
+                            <button 
+                                onClick={confirmReset}
+                                className="py-3.5 rounded-2xl bg-rose-500 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-500/20 active:scale-95 transition-all"
+                            >
+                                Reset
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Calendar, Moon, Clock, Library, Sun, Compass, Fingerprint, Home, MoonStar, Coins, Heart } from 'lucide-react';
+import { Calendar, Moon, Clock, Library, Sun, Compass, Fingerprint, Home, MoonStar, Coins, Heart, Trophy, Book } from 'lucide-react';
 import InstallPWA from './InstallPWA';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -58,6 +58,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                     <nav className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-white/20 dark:border-slate-800/40 px-2 py-3 rounded-[2.5rem] flex justify-around items-center shadow-[0_15px_50px_-12px_rgba(0,0,0,0.4)] dark:shadow-none mb-2">
                         <MobileNavLink to="/" icon={<Home size={22} />} label="Beranda" active={isActive('/')} />
                         <MobileNavLink to="/quran" icon={<Library size={22} />} label="Quran" active={isActive('/quran')} />
+                        <MobileNavLink to="/tracker" icon={<Trophy size={22} />} label="Tracker" active={isActive('/tracker')} />
                         <MobileNavLink to="/ramadan" icon={<MoonStar size={22} />} label="Ramadan" active={isActive('/ramadan')} />
                         <MobileNavLink to="/zakat" icon={<Coins size={22} />} label="Zakat" active={isActive('/zakat')} />
                         <MobileNavLink to="/muslimah" icon={<Heart size={22} />} label="Muslimah" active={isActive('/muslimah')} />

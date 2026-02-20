@@ -33,6 +33,7 @@ const CalendarPage: React.FC = () => {
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [hijriDate, setHijriDate] = useState<HijriDate | null>(null);
     const [loading, setLoading] = useState(false);
+    const [hijriOffset] = useState(() => Number(localStorage.getItem('muslim_app_hijri_offset')) || 0);
 
     useEffect(() => {
         fetchHijriDate(selectedDate);
@@ -41,7 +42,12 @@ const CalendarPage: React.FC = () => {
     const fetchHijriDate = async (date: Date) => {
         setLoading(true);
         try {
-            const data = await api.getHijriDate(date);
+            // Apply offset by adjusting the date sent to API or manual correction
+            // Here we adjust the source date to get shifted Hijri info
+            const adjustedDate = new Date(date);
+            adjustedDate.setDate(adjustedDate.getDate() + hijriOffset);
+            
+            const data = await api.getHijriDate(adjustedDate);
             setHijriDate(data);
         } catch (error) {
             console.error('Failed to fetch Hijri date', error);
@@ -58,16 +64,17 @@ const CalendarPage: React.FC = () => {
 
     const renderHeader = () => {
         return (
-            <div className="flex justify-between items-center mb-6 px-2">
-                <button onClick={prevMonth} className="p-2 hover:bg-slate-100 rounded-full text-slate-600 transition-colors">
+            <div className="flex justify-between items-center mb-8 px-2">
+                <button onClick={prevMonth} className="w-12 h-12 flex items-center justify-center bg-slate-50 dark:bg-slate-800/50 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-2xl text-slate-400 hover:text-emerald-600 transition-all">
                     <ChevronLeft size={24} />
                 </button>
                 <div className="text-center">
-                    <h2 className="text-xl font-bold text-slate-800">
+                    <h2 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] mb-1">Bulan Ini</h2>
+                    <h2 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tight">
                         {format(currentMonth, 'MMMM yyyy', { locale: id })}
                     </h2>
                 </div>
-                <button onClick={nextMonth} className="p-2 hover:bg-slate-100 rounded-full text-slate-600 transition-colors">
+                <button onClick={nextMonth} className="w-12 h-12 flex items-center justify-center bg-slate-50 dark:bg-slate-800/50 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-2xl text-slate-400 hover:text-emerald-600 transition-all">
                     <ChevronRight size={24} />
                 </button>
             </div>
@@ -111,13 +118,13 @@ const CalendarPage: React.FC = () => {
                 days.push(
                     <div
                         key={day.toString()}
-                        className={`relative aspect-square p-1 cursor-pointer`}
+                        className={`relative aspect-square p-1 cursor-pointer group`}
                         onClick={() => onDateClick(cloneDay)}
                     >
-                        <div className={`w-full h-full flex items-center justify-center rounded-xl text-sm font-medium transition-all duration-200
-                            ${!isCurrentMonth ? 'text-slate-300' : 'text-slate-700 hover:bg-slate-50'}
-                            ${isSelected ? 'bg-emerald-600 text-white shadow-md shadow-emerald-200 hover:bg-emerald-700' : ''}
-                            ${isDateToday && !isSelected ? 'border-2 border-emerald-500 text-emerald-600' : ''}
+                        <div className={`w-full h-full flex flex-col items-center justify-center rounded-2xl text-[11px] font-black transition-all duration-300
+                            ${!isCurrentMonth ? 'text-slate-300 dark:text-slate-800' : 'text-slate-600 dark:text-slate-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/10'}
+                            ${isSelected ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 scale-110 z-10' : ''}
+                            ${isDateToday && !isSelected ? 'bg-amber-100 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 ring-2 ring-amber-500/10' : ''}
                         `}>
                             {formattedDate}
                         </div>
@@ -132,7 +139,7 @@ const CalendarPage: React.FC = () => {
             );
             days = [];
         }
-        return <div className="space-y-1">{rows}</div>;
+        return <div className="space-y-2">{rows}</div>;
     };
 
     return (
@@ -140,47 +147,53 @@ const CalendarPage: React.FC = () => {
             <PageHeader title="Kalender Hijri" />
             
             <div className="max-w-md mx-auto w-full px-6 pt-8">
-            {/* Header / Hijri Detail Card */}
-            <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-3xl p-6 text-white shadow-lg shadow-emerald-100 mb-6 relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-4 opacity-10 rotate-12 pointer-events-none">
+            {/* Header / Hijri Detail Card - Premium Qolbi Style */}
+            <div className="bg-gradient-to-br from-emerald-800 via-emerald-900 to-emerald-950 dark:from-slate-900 dark:to-black rounded-[2.5rem] p-8 text-white shadow-2xl mb-8 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-8 opacity-5 text-white pointer-events-none group-hover:scale-110 transition-transform duration-1000">
                     <CalendarIcon size={140} />
                 </div>
+                
+                <div className="absolute -top-24 -right-24 w-64 h-64 bg-amber-500/10 rounded-full blur-[80px]"></div>
 
                 <div className="relative z-10 text-center min-h-[140px] flex flex-col justify-center">
-                    <div className="text-emerald-100 font-medium text-lg mb-1">
+                    <div className="text-emerald-300 text-[10px] font-black uppercase tracking-[0.3em] mb-4">
                         {format(selectedDate, 'EEEE, dd MMMM yyyy', { locale: id })}
                     </div>
 
                     {loading ? (
-                        <div className="flex justify-center py-4">
-                            <Loader2 className="animate-spin text-white" size={32} />
+                        <div className="flex flex-col items-center justify-center py-4 gap-3">
+                            <Loader2 className="animate-spin text-amber-400" size={32} />
+                            <p className="text-[8px] font-black text-white/30 uppercase tracking-widest">Memuat Hijriah...</p>
                         </div>
                     ) : hijriDate ? (
-                        <>
-                            <h1 className="text-4xl font-bold font-mono my-2">{hijriDate.day}</h1>
-                            <div className="text-xl opacity-90">
+                        <div className="flex flex-col items-center">
+                             <div className="relative mb-2">
+                                <h1 className="text-6xl font-black text-white tracking-tighter tabular-nums">{hijriDate.day}</h1>
+                                <div className="absolute -bottom-1 left-0 right-0 h-1.5 bg-amber-500 rounded-full"></div>
+                             </div>
+                            <div className="text-xl font-black text-emerald-50 uppercase tracking-tight">
                                 {hijriDate.month.en} {hijriDate.year} H
                             </div>
-                            <div className="mt-2 text-emerald-200 font-serif text-lg">
+                            <div className="mt-4 px-4 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/10 text-xs font-serif text-emerald-200">
                                 {hijriDate.month.ar}
                             </div>
-                        </>
+                        </div>
                     ) : (
-                        <div className="opacity-70">Pilih tanggal untuk melihat kalender Hijriah</div>
+                        <div className="text-white/40 text-[10px] font-black uppercase tracking-widest">Pilih tanggal untuk melihat kalender</div>
                     )}
                 </div>
             </div>
 
-            {/* Calendar Grid */}
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+            {/* Calendar Grid - Modern UI */}
+            <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 p-8">
                 {renderHeader()}
                 {renderDays()}
                 {renderCells()}
             </div>
 
-            {/* Hint */}
-            <div className="mt-6 p-4 bg-yellow-50 rounded-xl border border-yellow-100 text-yellow-800 text-xs text-center">
-                Tanggal Hijriah dapat berbeda +/- 1 hari sesuai metode penetapan.
+            {/* Hint - Premium Alert */}
+            <div className="mt-8 p-6 bg-slate-50 dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 text-slate-400 text-[9px] font-black uppercase tracking-widest text-center leading-relaxed">
+               <span className="text-amber-500 mr-2">!</span> Tanggal Hijriah dapat berbeda +/- 1 hari sesuai metode penetapan.
             </div>
         </div>
     </div>

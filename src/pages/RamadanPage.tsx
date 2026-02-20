@@ -48,7 +48,7 @@ const RamadanPage: React.FC = () => {
                     <Link to="/" className="absolute left-0 top-0 p-2 text-white/80 hover:text-white transition-colors">
                         <ChevronLeft size={24} />
                     </Link>
-                    <h1 className="text-2xl font-black mb-1 tracking-tight">Ramadan 1446H</h1>
+                    <h1 className="text-2xl font-black mb-1 ">Ramadan 1446H</h1>
                     <p className="text-primary-100 text-xs font-black uppercase  opacity-80 mt-1">Bulan Penuh Berkah</p>
                 </div>
             </div>
@@ -66,7 +66,7 @@ const RamadanPage: React.FC = () => {
                         
                         {isRamadan ? (
                             <div>
-                                <h2 className="text-sm font-black uppercase tracking-[0.3em] text-primary-100 mb-2">Marhaban ya Ramadan</h2>
+                                <h2 className="text-sm font-black uppercase text-primary-100 mb-2">Marhaban ya Ramadan</h2>
                                 <div className="text-4xl font-black mb-2 flex justify-center items-end gap-2">
                                     <span>Hari Ke-</span>
                                     <span className="text-secondary-300">{differenceInDays(currentTime, ramadanStart) + 1}</span>
@@ -75,7 +75,7 @@ const RamadanPage: React.FC = () => {
                             </div>
                         ) : (
                             <div>
-                                <h2 className="text-sm font-black uppercase tracking-[0.3em] text-primary-100 mb-2">Menuju Ramadan</h2>
+                                <h2 className="text-sm font-black uppercase text-primary-100 mb-2">Menuju Ramadan</h2>
                                 <div className="text-7xl font-black mb-2 tabular-nums">
                                     {displayDays}
                                 </div>
@@ -92,7 +92,7 @@ const RamadanPage: React.FC = () => {
                             <Calendar size={20} />
                         </div>
                         <div>
-                            <h3 className="font-black text-slate-800 dark:text-white text-sm uppercase tracking-tight">Awal Ramadan</h3>
+                            <h3 className="font-black text-slate-800 dark:text-white text-sm uppercase ">Awal Ramadan</h3>
                             <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold ">Prediksi mulai puasa</p>
                         </div>
                     </div>

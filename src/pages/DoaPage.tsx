@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Search, ChevronLeft, Sparkles, BookOpen, Clock, ScrollText, Users, Zap, Star, Bookmark, Volume2, Info, X, Share2, Copy, Heart, Home } from 'lucide-react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
+import { useToast } from '../components/CustomToast';
 
 interface DoaItem {
     id: string;
@@ -243,10 +244,39 @@ const DoaPage: React.FC = () => {
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedDoa, setSelectedDoa] = useState<DoaItem | null>(null);
+    const { showToast, ToastComponent } = useToast();
 
     useEffect(() => {
         window.scrollTo(0, 0);
     }, [category]);
+
+    const handleCopy = useCallback((doa: DoaItem) => {
+        const textToCopy = `${doa.title}\n\n${doa.arabic}\n\n${doa.latin}\n\nArtinya: ${doa.translation}`;
+        navigator.clipboard.writeText(textToCopy)
+            .then(() => showToast('Doa berhasil disalin!'))
+            .catch(() => showToast('Gagal menyalin doa.', 'error'));
+    }, [showToast]);
+
+    const handleShare = useCallback((doa: DoaItem) => {
+        const shareData = {
+            title: doa.title,
+            text: `${doa.title}\n\n${doa.arabic}\n\n${doa.translation}`,
+            url: window.location.href
+        };
+
+        if (navigator.share) {
+            navigator.share(shareData)
+                .then(() => showToast('Berhasil membagikan!'))
+                .catch((err) => {
+                    if (err.name !== 'AbortError') {
+                        showToast('Gagal membagikan.', 'error');
+                    }
+                });
+        } else {
+            handleCopy(doa);
+            showToast('Fitur bagikan tidak tersedia, doa disalin ke clipboard.');
+        }
+    }, [handleCopy, showToast]);
 
     const filteredCategories = categories.filter(c => 
         c.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -268,7 +298,8 @@ const DoaPage: React.FC = () => {
     };
 
     return (
-        <div className="max-w-md mx-auto w-full pb-24 bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors">
+        <div className="max-w-md mx-auto w-full pb-24 bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors text-left uppercase-tags-fix">
+            {ToastComponent}
             {/* Header */}
             <div className="bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-600 pt-12 pb-6 px-6 rounded-b-[2.5rem] shadow-lg mb-6 text-white text-center relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-10 rotate-12">
@@ -378,7 +409,7 @@ const DoaPage: React.FC = () => {
                                             </p>
                                         </div>
                                         
-                                        {!['asmaul', 'harian', 'sholat'].includes(category) && (
+                                        {!['harian', 'sholat'].includes(category) && (
                                             <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-2">
                                                 {doa.translation}
                                             </p>
@@ -439,11 +470,17 @@ const DoaPage: React.FC = () => {
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="p-6 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex gap-3">
-                            <button className="flex-1 flex items-center justify-center gap-2 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-[10px] font-black uppercase  hover:bg-primary-50 hover:text-primary-600 transition-all">
+                        <div className="p-6 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex gap-3 text-left">
+                            <button 
+                                onClick={() => handleCopy(selectedDoa)}
+                                className="flex-1 flex items-center justify-center gap-2 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-[10px] font-black uppercase hover:bg-primary-50 hover:text-primary-600 transition-all"
+                            >
                                 <Copy size={16} /> Salin
                             </button>
-                            <button className="flex-1 flex items-center justify-center gap-2 py-4 bg-primary-600 text-white rounded-2xl text-[10px] font-black uppercase  hover:bg-primary-700 shadow-lg shadow-primary-500/20 transition-all">
+                            <button 
+                                onClick={() => handleShare(selectedDoa)}
+                                className="flex-1 flex items-center justify-center gap-2 py-4 bg-primary-600 text-white rounded-2xl text-[10px] font-black uppercase hover:bg-primary-700 shadow-lg shadow-primary-500/20 transition-all"
+                            >
                                 <Share2 size={16} /> Bagikan
                             </button>
                         </div>

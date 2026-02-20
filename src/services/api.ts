@@ -445,5 +445,41 @@ export const api = {
             }
         }
         return null;
+    },
+
+    // Hadith API (Hadits Arbain)
+    getHadithArbain: async (): Promise<any[]> => {
+        const cacheKey = 'muslim_app_hadith_arbain';
+        const data = await api.fetchWithCache(cacheKey, async () => {
+            try {
+                const response = await axios.get('https://api.myquran.com/v2/hadits/arbain/semua');
+                if (response.data.status) {
+                    return response.data.data;
+                }
+                return [];
+            } catch (error) {
+                console.error('Error fetching hadith arbain:', error);
+                return [];
+            }
+        }, false, 60 * 24 * 30); // Cache for 30 days
+        return data || [];
+    },
+
+    // Random Doa API
+    getRandomDoa: async (): Promise<any> => {
+        const cacheKey = 'muslim_app_doa_random';
+        // We fetch fresh one or cached for shorter time
+        return api.fetchWithCache(cacheKey, async () => {
+            try {
+                const response = await axios.get('https://api.myquran.com/v2/doa/acak');
+                if (response.data.status) {
+                    return response.data.data;
+                }
+                return null;
+            } catch (error) {
+                console.error('Error fetching random doa:', error);
+                return null;
+            }
+        }, false, 60 * 60); // Cache for 1 hour
     }
 };
