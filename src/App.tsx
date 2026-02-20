@@ -37,6 +37,7 @@ function App() {
                     <Route path="/zakat" element={<ZakatCalculatorPage />} />
                     <Route path="/muslimah" element={<WomenHealthPage />} />
                     <Route path="/doa" element={<DoaPage />} />
+                    <Route path="/doa/:category" element={<DoaPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
                 </Routes>
             </Layout>

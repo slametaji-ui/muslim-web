@@ -12,7 +12,7 @@ const RamadanPage: React.FC = () => {
             const date = new Date(saved);
             if (!isNaN(date.getTime())) return date;
         }
-        return new Date('2026-02-20'); // Default estimation
+        return new Date('2026-03-01'); // Ramadan 2026 approx start
     });
     
     const [currentTime, setCurrentTime] = useState(new Date());
@@ -22,17 +22,18 @@ const RamadanPage: React.FC = () => {
     }, [ramadanStart]);
 
     useEffect(() => {
-        const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
         return () => clearInterval(timer);
     }, []);
 
+    const ramadanEnd = addDays(ramadanStart, 30);
+    const isRamadan = isAfter(currentTime, startOfDay(ramadanStart)) && isBefore(currentTime, startOfDay(ramadanEnd));
+    
     const daysToRamadan = differenceInDays(startOfDay(ramadanStart), startOfDay(currentTime));
-    const isRamadan = isAfter(currentTime, ramadanStart) && isBefore(currentTime, addDays(ramadanStart, 30));
     
     // If Ramadan has passed, set countdown to next year (roughly 354 days apart)
     let displayDays = daysToRamadan;
     if (daysToRamadan < 0 && !isRamadan) {
-        // Simple approximation for next Hijri year
         displayDays = daysToRamadan + 354; 
     }
 

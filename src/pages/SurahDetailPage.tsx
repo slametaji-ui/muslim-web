@@ -12,6 +12,7 @@ const SurahDetailPage: React.FC = () => {
 
     const [currentVerseAudio, setCurrentVerseAudio] = useState<number | null>(null);
     const [showTafsir, setShowTafsir] = useState(false);
+    const [showInfoModal, setShowInfoModal] = useState(false);
 
     useEffect(() => {
         if (id) {
@@ -33,6 +34,28 @@ const SurahDetailPage: React.FC = () => {
             console.error(error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const shareSurah = async () => {
+        if (!surah) return;
+        
+        const shareData = {
+            title: `Qolbi - Surah ${surah.name_id}`,
+            text: `Baca Surah ${surah.name_id} (${surah.translation_id}) di Qolbi. Terdiri dari ${surah.number_of_verses} Ayat.`,
+            url: window.location.href,
+        };
+
+        try {
+            if (navigator.share) {
+                await navigator.share(shareData);
+            } else {
+                // Fallback: Copy to clipboard
+                await navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`);
+                alert('Tautan surah berhasil disalin!');
+            }
+        } catch (error) {
+            console.error('Error sharing:', error);
         }
     };
 
@@ -91,10 +114,65 @@ const SurahDetailPage: React.FC = () => {
                     <h1 className="font-bold text-slate-800 text-lg">{surah.name_id}</h1>
                     <p className="text-xs text-slate-500">{surah.translation_id} • {surah.number_of_verses} Ayat</p>
                 </div>
-                <button className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors">
-                    <Info size={24} />
-                </button>
+                <div className="flex gap-1">
+                    <button 
+                        onClick={shareSurah}
+                        className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors"
+                    >
+                        <Share2 size={24} />
+                    </button>
+                    <button 
+                        onClick={() => setShowInfoModal(true)}
+                        className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors"
+                    >
+                        <Info size={24} />
+                    </button>
+                </div>
             </div>
+
+            {/* Surah Info Modal */}
+            {showInfoModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-300 relative">
+                        <button 
+                            onClick={() => setShowInfoModal(false)}
+                            className="absolute top-6 right-6 p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
+                        >
+                            <ChevronLeft className="rotate-90" size={20} />
+                        </button>
+                        
+                        <div className="text-center mb-8">
+                            <div className="w-20 h-20 bg-primary-50 dark:bg-primary-900/30 text-primary-600 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-inner">
+                                <BookOpen size={40} />
+                            </div>
+                            <h2 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight uppercase">{surah.name_id}</h2>
+                            <p className="text-primary-600 dark:text-primary-400 font-bold text-xs uppercase tracking-widest">{surah.translation_id}</p>
+                        </div>
+
+                        <div className="space-y-4 mb-8">
+                            <div className="flex justify-between items-center p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tempat Turun</span>
+                                <span className="text-sm font-bold text-slate-800 dark:text-white uppercase">{surah.revelation_id}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Jumlah Ayat</span>
+                                <span className="text-sm font-bold text-slate-800 dark:text-white uppercase">{surah.number_of_verses} Ayat</span>
+                            </div>
+                            <div className="flex justify-between items-center p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nomor Surah</span>
+                                <span className="text-sm font-bold text-slate-800 dark:text-white uppercase">Ke-{surah.number}</span>
+                            </div>
+                        </div>
+
+                        <button 
+                            onClick={() => setShowInfoModal(false)}
+                            className="w-full bg-primary-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-primary-500/20 active:scale-95 transition-all uppercase tracking-widest text-[10px]"
+                        >
+                            Tutup
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Surah Banner - Theme Updated to Green & Orange */}
             <div className="mx-4 mb-8 bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-600 rounded-[2.5rem] p-8 text-center text-white shadow-2xl relative overflow-hidden group">

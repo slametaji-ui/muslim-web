@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api, City, PrayerTimes } from '../services/api';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, MapPin, Loader2, Navigation, Sunrise, Sun, Moon, Volume2, RotateCw, Clock, CheckSquare, Circle, BookOpen, Library, Fingerprint, Sparkles, Download, User, Monitor, Layout as LayoutIcon, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { Search, MapPin, Loader2, Navigation, Sunrise, Sun, Moon, Volume2, RotateCw, Clock, CheckSquare, Circle, BookOpen, Library, Fingerprint, Sparkles, Download, User, Monitor, Layout as LayoutIcon, ChevronRight, CheckCircle2, MoonStar, Coins } from 'lucide-react';
 import { format, isSameDay } from 'date-fns';
 import { id } from 'date-fns/locale';
 
@@ -368,8 +368,36 @@ const PrayerTimesPage: React.FC = () => {
                          </div>
                     </Link>
 
+                    {/* Ramadan Card */}
+                    <Link to="/ramadan" className="group relative flex flex-col bg-gradient-to-br from-amber-500 to-amber-600 p-5 rounded-[2.5rem] shadow-lg shadow-amber-500/10 active:scale-95 transition-all overflow-hidden border border-white/10">
+                         <div className="absolute -right-4 -top-4 opacity-10 group-hover:scale-125 transition-transform duration-700">
+                             <MoonStar size={80} />
+                         </div>
+                         <div className="relative z-10">
+                             <div className="w-10 h-10 bg-white/20 rounded-2xl flex items-center justify-center text-white mb-4 group-hover:rotate-12 transition-transform">
+                                 <MoonStar size={22} />
+                             </div>
+                             <h3 className="text-white font-black text-lg tracking-tight">Ramadan</h3>
+                             <p className="text-amber-50 text-[8px] font-black uppercase opacity-80">Countdown & Amalan</p>
+                         </div>
+                    </Link>
+
+                    {/* Zakat Card */}
+                    <Link to="/zakat" className="group relative flex flex-col bg-gradient-to-br from-emerald-500 to-emerald-600 p-5 rounded-[2.5rem] shadow-lg shadow-emerald-500/10 active:scale-95 transition-all overflow-hidden border border-white/10">
+                         <div className="absolute -right-4 -top-4 opacity-10 group-hover:scale-125 transition-transform duration-700">
+                             <Coins size={80} />
+                         </div>
+                         <div className="relative z-10">
+                             <div className="w-10 h-10 bg-white/20 rounded-2xl flex items-center justify-center text-white mb-4 group-hover:-rotate-12 transition-transform">
+                                 <Coins size={22} />
+                             </div>
+                             <h3 className="text-white font-black text-lg tracking-tight">Zakat</h3>
+                             <p className="text-emerald-50 text-[8px] font-black uppercase opacity-80">Kalkulator Zakat</p>
+                         </div>
+                    </Link>
+
                     {/* Tasbih Card */}
-                    <Link to="/tasbih" className="group relative flex flex-col bg-gradient-to-br from-secondary-500 to-secondary-600 p-5 rounded-[2.5rem] shadow-lg shadow-secondary-500/10 active:scale-95 transition-all overflow-hidden border border-white/10">
+                    <Link to="/tasbih" className="group relative flex flex-col bg-slate-700 to-slate-800 p-5 rounded-[2.5rem] shadow-lg active:scale-95 transition-all overflow-hidden border border-white/10">
                          <div className="absolute -right-4 -top-4 opacity-10 group-hover:scale-125 transition-transform duration-700">
                              <Fingerprint size={80} />
                          </div>
@@ -378,7 +406,7 @@ const PrayerTimesPage: React.FC = () => {
                                  <Fingerprint size={22} />
                              </div>
                              <h3 className="text-white font-black text-lg tracking-tight">Tasbih</h3>
-                             <p className="text-secondary-50 text-[8px] font-black uppercase  opacity-80">Digital Dzikir</p>
+                             <p className="text-slate-100 text-[8px] font-black uppercase opacity-80">Digital Dzikir</p>
                          </div>
                     </Link>
 
@@ -392,7 +420,7 @@ const PrayerTimesPage: React.FC = () => {
                                  <Sparkles size={22} />
                              </div>
                              <h3 className="text-white font-black text-lg tracking-tight">Doa</h3>
-                             <p className="text-primary-50 text-[8px] font-black uppercase  opacity-80">Kumpulan Doa</p>
+                             <p className="text-primary-50 text-[8px] font-black uppercase opacity-80">Kumpulan Doa</p>
                          </div>
                     </Link>
                 </div>

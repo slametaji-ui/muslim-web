@@ -1,5 +1,6 @@
 {
   "name": "muslim-web",
+  "description": "Pendamping Muslim Modern",
   "private": true,
   "version": "0.0.0",
   "type": "module",

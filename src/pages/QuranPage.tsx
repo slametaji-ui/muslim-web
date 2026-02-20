@@ -4,10 +4,9 @@ import { api, Surah, Juz, Theme } from '../services/api';
 import { Search, Play, Pause, Loader2, Layers, Grid, Library, ChevronRight } from 'lucide-react';
 
 const QuranPage: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<'surah' | 'juz' | 'theme'>('surah');
+    const [activeTab, setActiveTab] = useState<'surah' | 'juz'>('surah');
     const [surahs, setSurahs] = useState<Surah[]>([]);
     const [juzs, setJuzs] = useState<Juz[]>([]);
-    const [themes, setThemes] = useState<Theme[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [playingId, setPlayingId] = useState<number | null>(null);
@@ -31,9 +30,6 @@ const QuranPage: React.FC = () => {
             } else if (activeTab === 'juz' && juzs.length === 0) {
                 const data = await api.getAllJuz();
                 setJuzs(data);
-            } else if (activeTab === 'theme' && themes.length === 0) {
-                const data = await api.getAllThemes();
-                setThemes(data);
             }
         } catch (error) {
             console.error('Failed to load data', error);
@@ -69,10 +65,6 @@ const QuranPage: React.FC = () => {
         s.translation_id.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const filteredThemes = themes.filter(t =>
-        t.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
     return (
         <div className="max-w-md mx-auto w-full pb-20">
             {/* Header - Theme Updated to Green & Orange */}
@@ -98,19 +90,13 @@ const QuranPage: React.FC = () => {
                             >
                                 Juz
                             </button>
-                            <button
-                                onClick={() => setActiveTab('theme')}
-                                className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'theme' ? 'bg-white text-primary-700 shadow-md scale-[0.98]' : 'text-primary-50 hover:bg-white/10'}`}
-                            >
-                                Tema
-                            </button>
                         </div>
 
                         <div className="relative">
                             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-primary-600" size={18} />
                             <input
                                 type="text"
-                                placeholder={`Cari ${activeTab === 'surah' ? 'Surah' : activeTab === 'theme' ? 'Tema' : 'Juz'}...`}
+                                placeholder={`Cari ${activeTab === 'surah' ? 'Surah' : 'Juz'}...`}
                                 value={searchQuery}
                                 onChange={handleSearch}
                                 className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-secondary-300 shadow-lg border-none text-sm font-bold"
@@ -183,7 +169,7 @@ const QuranPage: React.FC = () => {
                             <button onClick={() => setSearchQuery('')} className="mt-4 text-emerald-600 text-sm font-bold">Hapus Pencarian</button>
                         </div>
                     )
-                ) : activeTab === 'juz' ? (
+                ) : (
                     <div className="grid grid-cols-2 gap-4">
                         {juzs.map((juz, index) => (
                             <Link 
@@ -200,33 +186,6 @@ const QuranPage: React.FC = () => {
                                 <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest leading-relaxed">{juz.name_start_id}</p>
                             </Link>
                         ))}
-                    </div>
-                ) : (
-                    <div className="space-y-3">
-                        {filteredThemes.length > 0 ? (
-                            filteredThemes.map((theme, index) => (
-                                <Link 
-                                    key={theme.id} 
-                                    to={`/quran/tema/${theme.id}`} 
-                                    className="flex items-center gap-4 bg-white p-5 rounded-3xl shadow-sm border border-slate-100 hover:bg-primary-50 hover:border-primary-200 hover:shadow-xl hover:shadow-primary-500/5 transition-all group animate-in fade-in slide-in-from-left-4 duration-300"
-                                    style={{ animationDelay: `${index * 50}ms` }}
-                                >
-                                    <div className="w-10 h-10 rounded-2xl bg-primary-50 text-primary-600 flex items-center justify-center group-hover:bg-primary-600 group-hover:text-white transition-all shadow-inner">
-                                        <Layers size={20} />
-                                    </div>
-                                    <h3 className="font-black text-slate-700 group-hover:text-primary-800 transition-colors flex-1 uppercase tracking-tight text-sm">{theme.name}</h3>
-                                    <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-secondary-100 group-hover:text-secondary-600 transition-all">
-                                        <ChevronRight size={18} />
-                                    </div>
-                                </Link>
-                            ))
-                        ) : (
-                            <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-200">
-                                <Search className="mx-auto text-slate-300 mb-4" size={48} />
-                                <p className="text-slate-500 font-medium">Tidak ditemukan tema "{searchQuery}"</p>
-                                <button onClick={() => setSearchQuery('')} className="mt-4 text-emerald-600 text-sm font-bold">Hapus Pencarian</button>
-                            </div>
-                        )}
                     </div>
                 )}
             </div>
