@@ -51,7 +51,7 @@ class NotificationService {
                     body: `Sudah masuk waktu ${name} untuk wilayah setempat.`,
                     icon: '/logo-muslimapp.png',
                     vibrate: [200, 100, 200]
-                });
+                } as any);
             }, delay);
         }
     }
