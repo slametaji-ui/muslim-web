@@ -527,9 +527,9 @@ const PrayerTimesPage: React.FC = () => {
                                                 {item.icon}
                                             </div>
                                             <div className="text-left">
-                                                <h3 className={`font-black text-[11px] uppercase tracking-wide ${done ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'}`}>{item.label}</h3>
-                                                {item.time && <p className="text-[9px] font-bold text-slate-400 mt-0.5">{item.time}</p>}
-                                                {!item.time && <p className="text-[9px] font-black text-amber-500 uppercase mt-0.5">{item.category}</p>}
+                                                <h3 className={`font-black text-[13px] uppercase tracking-wide ${done ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'}`}>{item.label}</h3>
+                                                {item.time && <p className="text-[11px] font-bold text-slate-400 mt-0.5">{item.time}</p>}
+                                                {!item.time && <p className="text-[11px] font-black text-amber-500 uppercase mt-0.5">{item.category}</p>}
                                             </div>
                                         </div>
                                         <div className={`transition-all ${done ? 'text-emerald-500' : 'text-slate-200 dark:text-slate-800'}`}>
