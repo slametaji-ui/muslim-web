@@ -282,7 +282,7 @@ const DoaPage: React.FC = () => {
                         {category && (
                             <button 
                                 onClick={() => navigate('/doa')}
-                                className="text-[10px] font-black uppercase tracking-widest bg-white/10 px-4 py-1.5 rounded-full backdrop-blur-md border border-white/10"
+                                className="text-[10px] font-black uppercase  bg-white/10 px-4 py-1.5 rounded-full backdrop-blur-md border border-white/10"
                             >
                                 Semua Kategori
                             </button>
@@ -324,7 +324,7 @@ const DoaPage: React.FC = () => {
                                     {cat.icon}
                                 </div>
                                 <h3 className="font-black text-slate-800 dark:text-white mb-1 uppercase tracking-tight text-sm leading-tight">{cat.title}</h3>
-                                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{cat.description}</p>
+                                <p className="text-[9px] text-slate-400 font-bold uppercase ">{cat.description}</p>
                             </Link>
                         ))}
                     </div>
@@ -332,7 +332,7 @@ const DoaPage: React.FC = () => {
                     <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-500">
                         {category === 'matsurat' && (
                             <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-200 dark:border-amber-900/50 rounded-[2.5rem] p-6 mb-8 relative overflow-hidden">
-                                <h4 className="text-[10px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-400 mb-3 flex items-center gap-2">
+                                <h4 className="text-[10px] font-black uppercase  text-amber-700 dark:text-amber-400 mb-3 flex items-center gap-2">
                                     <Info size={14} /> Keutamaan Al-Ma&apos;tsurat
                                 </h4>
                                 <ul className="space-y-2">
@@ -387,7 +387,7 @@ const DoaPage: React.FC = () => {
                                 ))
                             ) : (
                                 <div className="text-center py-20 col-span-2">
-                                    <p className="text-slate-400 font-bold text-sm uppercase tracking-widest">Belum ada data</p>
+                                    <p className="text-slate-400 font-bold text-sm uppercase ">Belum ada data</p>
                                 </div>
                             )}
                         </div>
@@ -440,10 +440,10 @@ const DoaPage: React.FC = () => {
 
                         {/* Modal Footer */}
                         <div className="p-6 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex gap-3">
-                            <button className="flex-1 flex items-center justify-center gap-2 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-primary-50 hover:text-primary-600 transition-all">
+                            <button className="flex-1 flex items-center justify-center gap-2 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-[10px] font-black uppercase  hover:bg-primary-50 hover:text-primary-600 transition-all">
                                 <Copy size={16} /> Salin
                             </button>
-                            <button className="flex-1 flex items-center justify-center gap-2 py-4 bg-primary-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-primary-700 shadow-lg shadow-primary-500/20 transition-all">
+                            <button className="flex-1 flex items-center justify-center gap-2 py-4 bg-primary-600 text-white rounded-2xl text-[10px] font-black uppercase  hover:bg-primary-700 shadow-lg shadow-primary-500/20 transition-all">
                                 <Share2 size={16} /> Bagikan
                             </button>
                         </div>

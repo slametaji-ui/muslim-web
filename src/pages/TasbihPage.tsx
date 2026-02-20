@@ -137,7 +137,7 @@ const TasbihPage: React.FC = () => {
                         <BackIcon size={24} />
                     </Link>
                     <h1 className="text-2xl font-black mb-1 tracking-tight">Tasbih Digital</h1>
-                    <p className="text-primary-100 text-xs font-black uppercase tracking-widest opacity-80 mt-1">Dzikir & Mengingat Allah</p>
+                    <p className="text-primary-100 text-xs font-black uppercase  opacity-80 mt-1">Dzikir & Mengingat Allah</p>
                     
                     <button 
                         onClick={() => setIsSoundOn(!isSoundOn)}
@@ -162,7 +162,7 @@ const TasbihPage: React.FC = () => {
                             onClick={() => setShowDzikirList(true)}
                             className="bg-primary-50 dark:bg-primary-900/30 px-4 py-2 rounded-2xl flex items-center gap-2 border border-primary-100/50 dark:border-primary-800 shadow-inner"
                         >
-                            <span className="text-[10px] font-black uppercase tracking-widest leading-none">Pilih Dzikir</span>
+                            <span className="text-[10px] font-black uppercase  leading-none">Pilih Dzikir</span>
                             <List size={12} />
                         </button>
                         <button onClick={nextDzikir} className="p-2 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-xl transition-colors">
@@ -193,7 +193,7 @@ const TasbihPage: React.FC = () => {
 
                 <div className="bg-slate-900 dark:bg-primary-600 text-white rounded-full px-4 py-1.5 flex items-center gap-2 shadow-xl border border-white/10 relative z-20">
                     <Target size={12} className="text-primary-300" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Target: {target || '∞'}</span>
+                    <span className="text-[10px] font-black uppercase ">Target: {target || '∞'}</span>
                 </div>
 
                 <div className="w-full max-w-[190px] aspect-square relative">
@@ -249,7 +249,7 @@ const TasbihPage: React.FC = () => {
                                     className={`p-6 rounded-[2rem] text-left transition-all flex items-center justify-between group border ${dzikirIndex === index ? 'bg-gradient-to-br from-primary-600 to-primary-700 text-white border-transparent shadow-xl shadow-primary-500/20' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-primary-200 dark:hover:border-primary-800 hover:bg-primary-50/30'}`}
                                 >
                                     <div className="flex-1">
-                                        <div className={`text-[9px] font-black uppercase tracking-widest mb-1 ${dzikirIndex === index ? 'text-primary-100' : 'text-secondary-600'}`}>Target: {item.target}</div>
+                                        <div className={`text-[9px] font-black uppercase  mb-1 ${dzikirIndex === index ? 'text-primary-100' : 'text-secondary-600'}`}>Target: {item.target}</div>
                                         <div className={`text-md font-black transition-colors ${dzikirIndex === index ? 'text-white' : 'text-slate-800 dark:text-white'}`}>{item.latin}</div>
                                         <div className={`text-[10px] font-medium leading-tight mt-1 opacity-70 ${dzikirIndex === index ? 'text-primary-50' : 'text-slate-500'}`}>{item.meaning}</div>
                                     </div>
@@ -259,7 +259,7 @@ const TasbihPage: React.FC = () => {
                         </div>
                         <button 
                             onClick={() => setShowDzikirList(false)}
-                            className="w-full mt-6 py-2 text-slate-400 font-bold text-[10px] uppercase tracking-widest"
+                            className="w-full mt-6 py-2 text-slate-400 font-bold text-[10px] uppercase "
                         >
                             Tutup
                         </button>

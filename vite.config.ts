@@ -10,9 +10,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['logo-muslimapp.png', 'favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Muslim App',
-        short_name: 'MuslimApp',
-        description: 'Pendamping Muslim: Jadwal Sholat, Al-Quran, dan Dzikir',
+        name: 'Qolbi',
+        short_name: 'Qolbi',
+        description: 'Qolbi: Pendamping Muslim Modern',
         theme_color: '#059669',
         background_color: '#ffffff',
         display: 'standalone',

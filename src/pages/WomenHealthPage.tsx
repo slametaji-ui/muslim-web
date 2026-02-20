@@ -93,7 +93,7 @@ const WomenHealthPage: React.FC = () => {
                         <ChevronLeft size={24} />
                     </Link>
                     <h1 className="text-2xl font-black mb-1 tracking-tight">Fitur Muslimah</h1>
-                    <p className="text-primary-100 text-xs font-black uppercase tracking-widest opacity-80 mt-1">Kesehatan & Ibadah</p>
+                    <p className="text-primary-100 text-xs font-black uppercase  opacity-80 mt-1">Kesehatan & Ibadah</p>
                 </div>
             </div>
             
@@ -102,7 +102,7 @@ const WomenHealthPage: React.FC = () => {
                 {/* 1. Enhanced Menstruation Section */}
                 <div className="mb-8">
                     <div className="flex items-center justify-between mb-4 px-1">
-                        <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                        <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase  flex items-center gap-2">
                              <Droplets size={16} className="text-rose-500" /> Pelacak Haid
                         </h3>
                         <button 
@@ -115,7 +115,7 @@ const WomenHealthPage: React.FC = () => {
 
                     {showSettings && (
                         <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-rose-100 dark:border-rose-900/30 mb-4 shadow-sm animate-in fade-in slide-in-from-top-2">
-                            <h4 className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-4">Pengaturan Siklus</h4>
+                            <h4 className="text-[10px] font-black text-rose-500 uppercase  mb-4">Pengaturan Siklus</h4>
                             <div className="space-y-4">
                                 <div>
                                     <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">Durasi Haid Rata-rata (Hari)</label>
@@ -155,7 +155,7 @@ const WomenHealthPage: React.FC = () => {
                                             Hari ke-{currentDay} <span className="opacity-60 text-xs font-bold">dari {periodDuration} hari</span>
                                         </div>
                                         {estEndDate && (
-                                            <div className="text-[10px] font-bold opacity-80 uppercase tracking-widest text-right">
+                                            <div className="text-[10px] font-bold opacity-80 uppercase  text-right">
                                                 Estimasi Selesai:<br/>{format(estEndDate, 'dd MMM yyyy', { locale: id })}
                                             </div>
                                         )}
@@ -173,12 +173,12 @@ const WomenHealthPage: React.FC = () => {
                                 {!isMenstruating ? (
                                     <button 
                                         onClick={handleStartPeriod}
-                                        className="flex-1 py-4 bg-rose-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-rose-100 dark:shadow-none hover:bg-rose-600 transition-all active:scale-95"
+                                        className="flex-1 py-4 bg-rose-500 text-white rounded-2xl font-black text-[10px] uppercase  shadow-xl shadow-rose-100 dark:shadow-none hover:bg-rose-600 transition-all active:scale-95"
                                     >Mulai Haid Sekarang</button>
                                 ) : (
                                     <button 
                                         onClick={handleStopPeriod}
-                                        className="flex-1 py-4 bg-white text-rose-600 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-rose-50 transition-all active:scale-95"
+                                        className="flex-1 py-4 bg-white text-rose-600 rounded-2xl font-black text-[10px] uppercase  shadow-xl hover:bg-rose-50 transition-all active:scale-95"
                                     >Sudah Selesai / Suci</button>
                                 )}
                             </div>
@@ -190,8 +190,8 @@ const WomenHealthPage: React.FC = () => {
                 <div className="mb-8">
                     <div className="flex items-center justify-between mb-6 px-1">
                         <div>
-                            <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest">Qadha Puasa Ramadan</h3>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Pantau tanggungan puasa Anda</p>
+                            <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase ">Qadha Puasa Ramadan</h3>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase  mt-0.5">Pantau tanggungan puasa Anda</p>
                         </div>
                         <button 
                             onClick={addDebtYear}
@@ -210,14 +210,14 @@ const WomenHealthPage: React.FC = () => {
                                             {debt.year}
                                         </div>
                                         <div>
-                                            <div className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Tahun Hijriah</div>
+                                            <div className="text-[8px] font-black text-slate-400 uppercase ">Tahun Hijriah</div>
                                             <h4 className="text-sm font-black text-slate-800 dark:text-white uppercase leading-tight">Ramadan {debt.year} H</h4>
                                         </div>
                                     </div>
                                     <div className="text-right">
                                         <div className={`px-3 py-1.5 rounded-full flex items-center gap-1.5 ${debt.paid >= debt.days ? 'bg-primary-50 text-primary-600' : 'bg-secondary-50 text-secondary-600'}`}>
                                             {debt.paid >= debt.days ? <CheckCircle2 size={12} /> : <Clock size={12} />}
-                                            <span className="text-[9px] font-black uppercase tracking-widest">
+                                            <span className="text-[9px] font-black uppercase ">
                                                 {debt.paid >= debt.days ? 'Lunas' : 'Tersisa'}
                                             </span>
                                         </div>
@@ -226,7 +226,7 @@ const WomenHealthPage: React.FC = () => {
 
                                 <div className="mb-6">
                                     <div className="flex justify-between items-end mb-2">
-                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Progres Pelunasan</span>
+                                        <span className="text-[10px] font-black text-slate-400 uppercase ">Progres Pelunasan</span>
                                         <span className="text-xs font-black text-slate-800 dark:text-white tabular-nums">{debt.paid} <span className="text-slate-400 font-bold">/ {debt.days} Hari</span></span>
                                     </div>
                                     <div className="h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
@@ -240,12 +240,12 @@ const WomenHealthPage: React.FC = () => {
                                 <div className="flex gap-2">
                                     <button 
                                         onClick={() => updatePaidDays(debt.id, -1)}
-                                        className="flex-1 py-3 bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-400 dark:text-slate-500 font-black text-[10px] uppercase tracking-widest border border-slate-100 dark:border-slate-700 active:scale-95 transition-all"
+                                        className="flex-1 py-3 bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-400 dark:text-slate-500 font-black text-[10px] uppercase  border border-slate-100 dark:border-slate-700 active:scale-95 transition-all"
                                     >-1 Hari</button>
                                     <button 
                                         onClick={() => updatePaidDays(debt.id, 1)}
                                         disabled={debt.paid >= debt.days}
-                                        className={`flex-[2] py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-primary-500/10 ${debt.paid >= debt.days ? 'bg-slate-100 text-slate-300' : 'bg-primary-600 text-white'}`}
+                                        className={`flex-[2] py-3 rounded-xl font-black text-[10px] uppercase  transition-all active:scale-95 shadow-lg shadow-primary-500/10 ${debt.paid >= debt.days ? 'bg-slate-100 text-slate-300' : 'bg-primary-600 text-white'}`}
                                     >Sudah Dibayar</button>
                                     <button 
                                         onClick={() => setFastDebts(prev => prev.filter(d => d.id !== debt.id))}
@@ -266,7 +266,7 @@ const WomenHealthPage: React.FC = () => {
                             <BookOpen size={20} />
                         </div>
                         <div>
-                            <h3 className="font-black text-primary-900 dark:text-primary-300 text-xs mb-1 uppercase tracking-widest">Niat Mandi Wajib</h3>
+                            <h3 className="font-black text-primary-900 dark:text-primary-300 text-xs mb-1 uppercase ">Niat Mandi Wajib</h3>
                             <p className="text-primary-700 dark:text-primary-400 text-[10px] leading-relaxed font-bold italic mb-2">
                                 "Nawaitul ghusla liraf'il hadatsil akbari minal haidhi fardhan lillaahi ta'aalaa."
                             </p>
@@ -279,7 +279,7 @@ const WomenHealthPage: React.FC = () => {
                             <Info size={20} />
                         </div>
                         <div>
-                            <h3 className="font-black text-secondary-900 dark:text-secondary-300 text-xs mb-1 uppercase tracking-widest">Wawasan Fiqh</h3>
+                            <h3 className="font-black text-secondary-900 dark:text-secondary-300 text-xs mb-1 uppercase ">Wawasan Fiqh</h3>
                             <ul className="text-[10px] text-secondary-800 dark:text-secondary-400 space-y-2 font-bold leading-tight">
                                 <li className="flex gap-2"><ChevronRight size={10} className="mt-0.5 shrink-0" /> Batas minimal haid adalah 24 jam.</li>
                                 <li className="flex gap-2"><ChevronRight size={10} className="mt-0.5 shrink-0" /> Batas maksimal haid adalah 15 hari.</li>

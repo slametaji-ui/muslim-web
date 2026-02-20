@@ -107,19 +107,19 @@ const ZakatCalculatorPage: React.FC = () => {
                         <ChevronLeft size={24} />
                     </Link>
                     <h1 className="text-2xl font-black mb-1 tracking-tight">Layanan Zakat</h1>
-                    <p className="text-primary-100 text-xs font-black uppercase tracking-widest opacity-80 mt-1">Sucikan Harta & Jiwa</p>
+                    <p className="text-primary-100 text-xs font-black uppercase  opacity-80 mt-1">Sucikan Harta & Jiwa</p>
 
                     {/* Section Switcher */}
                     <div className="mt-8 flex bg-white/10 backdrop-blur-md p-1 rounded-2xl border border-white/10 shadow-inner">
                         <button
                             onClick={() => setActiveSection('calculator')}
-                            className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeSection === 'calculator' ? 'bg-white text-primary-700 shadow-md scale-[0.98]' : 'text-primary-50 hover:bg-white/10'}`}
+                            className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase  transition-all ${activeSection === 'calculator' ? 'bg-white text-primary-700 shadow-md scale-[0.98]' : 'text-primary-50 hover:bg-white/10'}`}
                         >
                             Calculator
                         </button>
                         <button
                             onClick={() => setActiveSection('history')}
-                            className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeSection === 'history' ? 'bg-white text-primary-700 shadow-md scale-[0.98]' : 'text-primary-50 hover:bg-white/10'}`}
+                            className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase  transition-all ${activeSection === 'history' ? 'bg-white text-primary-700 shadow-md scale-[0.98]' : 'text-primary-50 hover:bg-white/10'}`}
                         >
                             Riwayat
                         </button>
@@ -159,7 +159,7 @@ const ZakatCalculatorPage: React.FC = () => {
                                 </div>
                                 <button 
                                     onClick={saveToHistory}
-                                    className="inline-flex items-center gap-2 px-6 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-widest transition-all"
+                                    className="inline-flex items-center gap-2 px-6 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-full text-[10px] font-black uppercase  transition-all"
                                 >
                                     <Save size={14} /> Simpan ke Riwayat
                                 </button>
@@ -171,11 +171,11 @@ const ZakatCalculatorPage: React.FC = () => {
                             {zakatCategory === 'fitrah' && (
                                 <div className="space-y-6 animate-in fade-in duration-300">
                                     <div className="flex bg-slate-50 dark:bg-slate-800 p-1 rounded-2xl mb-4 shadow-inner">
-                                        <button onClick={() => setZakatType('money')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${zakatType === 'money' ? 'bg-primary-600 text-white shadow-lg' : 'text-slate-400'}`}>Uang</button>
-                                        <button onClick={() => setZakatType('rice')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${zakatType === 'rice' ? 'bg-primary-600 text-white shadow-lg' : 'text-slate-400'}`}>Beras</button>
+                                        <button onClick={() => setZakatType('money')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase  transition-all ${zakatType === 'money' ? 'bg-primary-600 text-white shadow-lg' : 'text-slate-400'}`}>Uang</button>
+                                        <button onClick={() => setZakatType('rice')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase  transition-all ${zakatType === 'rice' ? 'bg-primary-600 text-white shadow-lg' : 'text-slate-400'}`}>Beras</button>
                                     </div>
                                     <div>
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Jumlah Orang</label>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase  block mb-4">Jumlah Orang</label>
                                         <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 p-2 rounded-2xl border border-slate-100 dark:border-slate-800">
                                             <button onClick={() => setPersonCount(Math.max(1, personCount - 1))} className="w-12 h-12 flex items-center justify-center bg-white dark:bg-slate-700 rounded-xl shadow-sm text-primary-600 font-bold">-</button>
                                             <span className="text-xl font-black text-slate-800 dark:text-white">{personCount}</span>
@@ -184,7 +184,7 @@ const ZakatCalculatorPage: React.FC = () => {
                                     </div>
                                     {zakatType === 'money' && (
                                         <div>
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Harga Beras / Liter (Rp)</label>
+                                            <label className="text-[10px] font-black text-slate-400 uppercase  block mb-4">Harga Beras / Liter (Rp)</label>
                                             <input 
                                                 type="text" 
                                                 value={formatDisplay(ricePrice)} 
@@ -200,7 +200,7 @@ const ZakatCalculatorPage: React.FC = () => {
                             {zakatCategory === 'penghasilan' && (
                                 <div className="space-y-6 animate-in fade-in duration-300">
                                     <div>
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Total Pendapatan / Bulan (Rp)</label>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase  block mb-4">Total Pendapatan / Bulan (Rp)</label>
                                         <input 
                                             type="text" 
                                             value={formatDisplay(income)} 
@@ -218,7 +218,7 @@ const ZakatCalculatorPage: React.FC = () => {
                             {zakatCategory === 'maal' && (
                                 <div className="space-y-6 animate-in fade-in duration-300">
                                     <div>
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Total Aset Harta (Rp)</label>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase  block mb-4">Total Aset Harta (Rp)</label>
                                         <input 
                                             type="text" 
                                             value={formatDisplay(assets)} 
@@ -237,7 +237,7 @@ const ZakatCalculatorPage: React.FC = () => {
                             {zakatCategory === 'perdagangan' && (
                                 <div className="space-y-4 animate-in fade-in duration-300">
                                     <div>
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Modal / Stok Barang (Rp)</label>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase  block mb-1">Modal / Stok Barang (Rp)</label>
                                         <input 
                                             type="text" 
                                             value={formatDisplay(tradeInventory)} 
@@ -247,7 +247,7 @@ const ZakatCalculatorPage: React.FC = () => {
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Uang Tunai / Piutang (Rp)</label>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase  block mb-1">Uang Tunai / Piutang (Rp)</label>
                                         <input 
                                             type="text" 
                                             value={formatDisplay(tradeCash)} 
@@ -257,7 +257,7 @@ const ZakatCalculatorPage: React.FC = () => {
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Hutang Jatuh Tempo (Rp)</label>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase  block mb-1">Hutang Jatuh Tempo (Rp)</label>
                                         <input 
                                             type="text" 
                                             value={formatDisplay(tradeDebt)} 
@@ -303,7 +303,7 @@ const ZakatCalculatorPage: React.FC = () => {
                                 <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-300 dark:text-slate-700">
                                     <History size={40} />
                                 </div>
-                                <p className="text-slate-400 font-bold text-sm uppercase tracking-widest">Belum ada riwayat</p>
+                                <p className="text-slate-400 font-bold text-sm uppercase ">Belum ada riwayat</p>
                             </div>
                         )}
                     </div>
@@ -319,7 +319,7 @@ const CategoryTab = ({ active, icon, label, onClick }: { active: boolean; icon: 
         className={`flex flex-col items-center gap-2 py-4 rounded-3xl transition-all ${active ? 'bg-primary-600 text-white shadow-lg' : 'bg-white dark:bg-slate-900 text-slate-400 border border-slate-100 dark:border-slate-800 hover:bg-slate-50'}`}
     >
         {icon}
-        <span className="text-[8px] font-black uppercase tracking-widest font-sans">{label}</span>
+        <span className="text-[8px] font-black uppercase  font-sans">{label}</span>
     </button>
 );
 

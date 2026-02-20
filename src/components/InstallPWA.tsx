@@ -77,7 +77,7 @@ const InstallPWA: React.FC = () => {
                         </div>
                     </div>
 
-                    <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-2 tracking-tight">Pasang Aplikasi Muslim</h2>
+                    <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-2 tracking-tight">Pasang Aplikasi Qolbi</h2>
                     <p className="text-slate-500 dark:text-slate-400 text-sm font-medium leading-relaxed mb-8 max-w-[280px]">
                         Nikmati pengalaman ibadah yang lebih lancar, cepat, dan tanpa gangguan browser.
                     </p>

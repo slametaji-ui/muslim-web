@@ -66,7 +66,7 @@ const QuranPage: React.FC = () => {
     );
 
     return (
-        <div className="max-w-md mx-auto w-full pb-20">
+        <div className="max-w-md mx-auto w-full pb-20 dark:bg-slate-950 transition-colors">
             {/* Header - Theme Updated to Green & Orange */}
             <div className="bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-600 pt-12 pb-6 px-6 rounded-b-[2.5rem] shadow-lg mb-6 text-white text-center relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-10 rotate-12">
@@ -80,13 +80,13 @@ const QuranPage: React.FC = () => {
                         <div className="flex bg-white/10 backdrop-blur-md p-1 rounded-2xl mb-4 border border-white/10 shadow-inner">
                             <button
                                 onClick={() => setActiveTab('surah')}
-                                className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'surah' ? 'bg-white text-primary-700 shadow-md scale-[0.98]' : 'text-primary-50 hover:bg-white/10'}`}
+                                className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase  transition-all ${activeTab === 'surah' ? 'bg-white text-primary-700 shadow-md scale-[0.98]' : 'text-primary-50 hover:bg-white/10'}`}
                             >
                                 Surah
                             </button>
                             <button
                                 onClick={() => setActiveTab('juz')}
-                                className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'juz' ? 'bg-white text-primary-700 shadow-md scale-[0.98]' : 'text-primary-50 hover:bg-white/10'}`}
+                                className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase  transition-all ${activeTab === 'juz' ? 'bg-white text-primary-700 shadow-md scale-[0.98]' : 'text-primary-50 hover:bg-white/10'}`}
                             >
                                 Juz
                             </button>
@@ -94,13 +94,13 @@ const QuranPage: React.FC = () => {
 
                         <div className="relative">
                             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-primary-600" size={18} />
-                            <input
-                                type="text"
-                                placeholder={`Cari ${activeTab === 'surah' ? 'Surah' : 'Juz'}...`}
-                                value={searchQuery}
-                                onChange={handleSearch}
-                                className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-secondary-300 shadow-lg border-none text-sm font-bold"
-                            />
+                                <input
+                                    type="text"
+                                    placeholder={`Cari ${activeTab === 'surah' ? 'Surah' : 'Juz'}...`}
+                                    value={searchQuery}
+                                    onChange={handleSearch}
+                                    className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-white dark:bg-slate-900 dark:text-white dark:placeholder-slate-500 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-secondary-300 shadow-lg border-none text-sm font-bold"
+                                />
                         </div>
                     </div>
                 </div>
@@ -111,15 +111,15 @@ const QuranPage: React.FC = () => {
                 {loading ? (
                     <div className="space-y-3 animate-pulse">
                         {[...Array(6)].map((_, i) => (
-                            <div key={i} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center">
+                            <div key={i} className="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 flex justify-between items-center">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 bg-slate-100 rounded-full"></div>
+                                    <div className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-full"></div>
                                     <div className="space-y-2">
-                                        <div className="h-4 w-24 bg-slate-100 rounded"></div>
-                                        <div className="h-3 w-32 bg-slate-100 rounded"></div>
+                                        <div className="h-4 w-24 bg-slate-100 dark:bg-slate-800 rounded"></div>
+                                        <div className="h-3 w-32 bg-slate-100 dark:bg-slate-800 rounded"></div>
                                     </div>
                                 </div>
-                                <div className="w-10 h-10 bg-slate-100 rounded-full"></div>
+                                <div className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-full"></div>
                             </div>
                         ))}
                     </div>
@@ -128,18 +128,18 @@ const QuranPage: React.FC = () => {
                         filteredSurahs.map((surah, index) => (
                             <div 
                                 key={surah.number} 
-                                className="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex justify-between items-center hover:bg-primary-50/50 hover:border-primary-100 hover:shadow-xl hover:shadow-primary-500/5 transition-all group relative animate-in fade-in slide-in-from-bottom-4 duration-300"
+                                className="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 flex justify-between items-center hover:bg-primary-50/50 dark:hover:bg-primary-900/10 hover:border-primary-100 dark:hover:border-primary-800 hover:shadow-xl hover:shadow-primary-500/5 transition-all group relative animate-in fade-in slide-in-from-bottom-4 duration-300"
                                 style={{ animationDelay: `${index * 50}ms` }}
                             >
                                 <Link to={`/quran/${surah.number}`} className="absolute inset-0 z-0"></Link>
                                 <div className="flex items-center gap-4 relative z-10 pointer-events-none">
-                                    <div className="w-12 h-12 bg-primary-50 text-primary-600 rounded-2xl flex items-center justify-center font-black text-sm relative transition-all group-hover:bg-primary-600 group-hover:text-white shadow-inner">
-                                        <div className="absolute inset-0 border-2 border-primary-100/50 rounded-2xl"></div>
+                                    <div className="w-12 h-12 bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-2xl flex items-center justify-center font-black text-sm relative transition-all group-hover:bg-primary-600 group-hover:text-white shadow-inner">
+                                        <div className="absolute inset-0 border-2 border-primary-100/50 dark:border-primary-900/30 rounded-2xl"></div>
                                         {surah.number}
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-slate-800 group-hover:text-primary-700 transition-colors uppercase tracking-tight text-sm">{surah.name_id}</h3>
-                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                                        <h3 className="font-bold text-slate-800 dark:text-white group-hover:text-primary-700 dark:group-hover:text-primary-400 transition-colors uppercase tracking-tight text-sm">{surah.name_id}</h3>
+                                        <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
                                             {surah.translation_id} • {surah.number_of_verses} Ayat
                                         </p>
                                     </div>
@@ -155,7 +155,7 @@ const QuranPage: React.FC = () => {
                                             e.stopPropagation();
                                             toggleAudio(surah.audio_url, surah.number);
                                         }}
-                                        className={`p-2.5 rounded-2xl transition-all ${playingId === surah.number ? 'bg-secondary-500 text-white shadow-lg shadow-secondary-200 scale-110' : 'bg-slate-50 text-slate-400 hover:bg-primary-100 hover:text-primary-600'}`}
+                                        className={`p-2.5 rounded-2xl transition-all ${playingId === surah.number ? 'bg-secondary-500 text-white shadow-lg shadow-secondary-200 scale-110' : 'bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 hover:bg-primary-100 dark:hover:bg-primary-900/50 hover:text-primary-600 dark:hover:text-primary-400'}`}
                                     >
                                         {playingId === surah.number ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" />}
                                     </button>
@@ -163,10 +163,10 @@ const QuranPage: React.FC = () => {
                             </div>
                         ))
                     ) : (
-                        <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-200">
-                            <Search className="mx-auto text-slate-300 mb-4" size={48} />
-                            <p className="text-slate-500 font-medium">Tidak ditemukan surah "{searchQuery}"</p>
-                            <button onClick={() => setSearchQuery('')} className="mt-4 text-emerald-600 text-sm font-bold">Hapus Pencarian</button>
+                        <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
+                            <Search className="mx-auto text-slate-300 dark:text-slate-700 mb-4" size={48} />
+                            <p className="text-slate-500 dark:text-slate-400 font-medium">Tidak ditemukan surah "{searchQuery}"</p>
+                            <button onClick={() => setSearchQuery('')} className="mt-4 text-emerald-600 dark:text-emerald-400 text-sm font-bold">Hapus Pencarian</button>
                         </div>
                     )
                 ) : (
@@ -175,15 +175,15 @@ const QuranPage: React.FC = () => {
                             <Link 
                                 key={juz.number} 
                                 to={`/quran/juz/${juz.number}`} 
-                                className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 hover:shadow-xl hover:shadow-primary-500/10 hover:border-primary-200 hover:-translate-y-1 transition-all text-center group animate-in zoom-in-95 duration-300"
+                                className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-xl hover:shadow-primary-500/10 hover:border-primary-200 dark:hover:border-primary-800 hover:-translate-y-1 transition-all text-center group animate-in zoom-in-95 duration-300"
                                 style={{ animationDelay: `${index * 30}ms` }}
                             >
-                                <div className="w-16 h-16 bg-primary-50 text-primary-600 rounded-3xl flex items-center justify-center font-black text-2xl mx-auto mb-4 group-hover:bg-primary-600 group-hover:text-white transition-all shadow-inner">
+                                <div className="w-16 h-16 bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-3xl flex items-center justify-center font-black text-2xl mx-auto mb-4 group-hover:bg-primary-600 group-hover:text-white transition-all shadow-inner">
                                     {juz.number}
                                 </div>
-                                <h3 className="font-black text-slate-800 mb-1 group-hover:text-primary-700 transition-colors text-lg uppercase tracking-tight">Juz {juz.number}</h3>
+                                <h3 className="font-black text-slate-800 dark:text-white mb-1 group-hover:text-primary-700 dark:group-hover:text-primary-400 transition-colors text-lg uppercase tracking-tight">Juz {juz.number}</h3>
                                 <div className="h-1 w-6 bg-secondary-400 mx-auto rounded-full mb-3 group-hover:w-12 transition-all duration-500"></div>
-                                <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest leading-relaxed">{juz.name_start_id}</p>
+                                <p className="text-[9px] text-slate-400 font-black uppercase  leading-relaxed">{juz.name_start_id}</p>
                             </Link>
                         ))}
                     </div>

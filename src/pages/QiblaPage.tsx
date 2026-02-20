@@ -81,7 +81,7 @@ const QiblaPage: React.FC = () => {
             
             <div className="max-w-md mx-auto w-full px-6 pt-8 text-center">
                 <div className="mb-10">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest animate-pulse">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase  animate-pulse">
                         <MapPin size={12} />
                         {location ? "Lokasi Terdeteksi" : "Lokasi Default"}
                     </div>
@@ -120,7 +120,7 @@ const QiblaPage: React.FC = () => {
                                          <div className="absolute inset-0 bg-emerald-500/10 group-hover:bg-emerald-500/20 transition-colors"></div>
                                          <Navigation className="text-emerald-500 rotate-45" size={24} fill="currentColor" />
                                      </div>
-                                     <div className="mt-2 text-[10px] font-black text-emerald-600 uppercase tracking-widest whitespace-nowrap">KABAH</div>
+                                     <div className="mt-2 text-[10px] font-black text-emerald-600 uppercase  whitespace-nowrap">KABAH</div>
                                  </div>
                                  <div className="h-full w-1 bg-gradient-to-t from-transparent via-emerald-500/50 to-emerald-500 mx-auto rounded-full"></div>
                              </div>
@@ -135,7 +135,7 @@ const QiblaPage: React.FC = () => {
                 {!permissionGranted && (
                     <button 
                         onClick={requestAccess}
-                        className="bg-emerald-600 text-white px-8 py-4 rounded-3xl font-black text-sm uppercase tracking-widest shadow-xl shadow-emerald-200 dark:shadow-none hover:bg-emerald-700 active:scale-95 transition-all mb-8"
+                        className="bg-emerald-600 text-white px-8 py-4 rounded-3xl font-black text-sm uppercase  shadow-xl shadow-emerald-200 dark:shadow-none hover:bg-emerald-700 active:scale-95 transition-all mb-8"
                     >
                         Aktifkan Kompas
                     </button>

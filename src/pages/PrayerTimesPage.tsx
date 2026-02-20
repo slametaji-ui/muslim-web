@@ -271,7 +271,17 @@ const PrayerTimesPage: React.FC = () => {
     const nextPrayer = getNextPrayer(schedule);
 
     return (
-        <div className="bg-white dark:bg-slate-950 min-h-screen pb-32 transition-colors">
+        <div className="bg-white dark:bg-slate-950 min-h-screen pb-32 transition-colors relative overflow-hidden">
+            {/* Soft decorative background elements */}
+            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+                {/* Gradient Blobs */}
+                <div className="absolute top-[-10%] right-[-10%] w-[50%] aspect-square bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-[120px] animate-pulse"></div>
+                <div className="absolute bottom-[20%] left-[-10%] w-[40%] aspect-square bg-amber-500/5 dark:bg-amber-400/5 rounded-full blur-[100px]"></div>
+                
+                {/* Subtle Islamic Pattern Overlay */}
+                <div className="absolute inset-x-0 top-0 h-64 opacity-[0.03] dark:opacity-[0.05]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l15 15l-15 15l-15 -15z' fill='%23059669' fill-opacity='1' fill-rule='evenodd'/%3E%3C/svg%3E")`, backgroundSize: '60px 60px' }}></div>
+            </div>
+
             {/* New Header: Personalized Greeting at the very top */}
             <div className="max-w-md mx-auto px-6 pt-8 pb-4 flex justify-between items-start relative z-40">
                 <div className="flex flex-col">

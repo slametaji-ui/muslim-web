@@ -49,7 +49,7 @@ const RamadanPage: React.FC = () => {
                         <ChevronLeft size={24} />
                     </Link>
                     <h1 className="text-2xl font-black mb-1 tracking-tight">Ramadan 1446H</h1>
-                    <p className="text-primary-100 text-xs font-black uppercase tracking-widest opacity-80 mt-1">Bulan Penuh Berkah</p>
+                    <p className="text-primary-100 text-xs font-black uppercase  opacity-80 mt-1">Bulan Penuh Berkah</p>
                 </div>
             </div>
             
@@ -71,7 +71,7 @@ const RamadanPage: React.FC = () => {
                                     <span>Hari Ke-</span>
                                     <span className="text-secondary-300">{differenceInDays(currentTime, ramadanStart) + 1}</span>
                                 </div>
-                                <p className="text-primary-100/70 text-xs font-bold uppercase tracking-widest">Semoga Berkah menyertai kita</p>
+                                <p className="text-primary-100/70 text-xs font-bold uppercase ">Semoga Berkah menyertai kita</p>
                             </div>
                         ) : (
                             <div>
@@ -79,7 +79,7 @@ const RamadanPage: React.FC = () => {
                                 <div className="text-7xl font-black mb-2 tabular-nums">
                                     {displayDays}
                                 </div>
-                                <p className="text-primary-100/70 text-xs font-black uppercase tracking-widest">Hari Lagi</p>
+                                <p className="text-primary-100/70 text-xs font-black uppercase ">Hari Lagi</p>
                             </div>
                         )}
                     </div>
@@ -93,7 +93,7 @@ const RamadanPage: React.FC = () => {
                         </div>
                         <div>
                             <h3 className="font-black text-slate-800 dark:text-white text-sm uppercase tracking-tight">Awal Ramadan</h3>
-                            <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold tracking-widest">Prediksi mulai puasa</p>
+                            <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold ">Prediksi mulai puasa</p>
                         </div>
                     </div>
                     
@@ -119,7 +119,7 @@ const RamadanPage: React.FC = () => {
                             <div className="w-12 h-12 bg-primary-50 dark:bg-primary-900/30 rounded-2xl flex items-center justify-center text-primary-600">
                                 <Star size={24} />
                             </div>
-                            <span className="text-[10px] font-black text-primary-500 uppercase tracking-widest">Amalan</span>
+                            <span className="text-[10px] font-black text-primary-500 uppercase ">Amalan</span>
                         </div>
                         <h4 className="font-black text-slate-800 dark:text-white mb-1">Niat Puasa Ramadan</h4>
                         <p className="text-xs text-slate-500 dark:text-slate-400 font-medium italic">"Nawaitu shauma ghadin 'an ada'i fardhi syahri Ramadhana hadzihis sanati lillahi Ta'ala."</p>
@@ -130,7 +130,7 @@ const RamadanPage: React.FC = () => {
                             <div className="w-12 h-12 bg-secondary-50 dark:bg-secondary-900/30 rounded-2xl flex items-center justify-center text-secondary-600">
                                 <Bell size={24} />
                             </div>
-                            <span className="text-[10px] font-black text-secondary-500 uppercase tracking-widest">Doa</span>
+                            <span className="text-[10px] font-black text-secondary-500 uppercase ">Doa</span>
                         </div>
                         <h4 className="font-black text-slate-800 dark:text-white mb-1">Doa Buka Puasa</h4>
                         <p className="text-xs text-slate-500 dark:text-slate-400 font-medium italic">"Allahumma laka shumtu wa 'ala rizqika afthartu, bi-rahmatika ya arhamar-rahimin."</p>

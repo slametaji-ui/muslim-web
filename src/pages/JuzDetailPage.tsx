@@ -27,7 +27,7 @@ const JuzDetailPage: React.FC = () => {
     };
 
     return (
-        <div className="max-w-md mx-auto w-full pb-20">
+        <div className="max-w-md mx-auto w-full pb-20 dark:bg-slate-950 transition-colors">
             {/* Header - Theme Updated to Green & Orange */}
             <div className="bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-600 pt-12 pb-8 px-6 rounded-b-[3rem] shadow-2xl mb-8 text-white relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-5 rotate-12">
@@ -35,7 +35,7 @@ const JuzDetailPage: React.FC = () => {
                 </div>
                 <div className="relative z-10 text-center">
                     <div className="flex justify-start mb-6">
-                        <Link to="/quran" className="inline-flex items-center text-primary-100 hover:text-white transition-all font-black text-[10px] uppercase tracking-widest bg-white/10 px-4 py-2 rounded-xl backdrop-blur-sm border border-white/10 active:scale-95">
+                        <Link to="/quran" className="inline-flex items-center text-primary-100 hover:text-white transition-all font-black text-[10px] uppercase  bg-white/10 px-4 py-2 rounded-xl backdrop-blur-sm border border-white/10 active:scale-95">
                             <ChevronLeft size={16} className="mr-1" /> Kembali
                         </Link>
                     </div>
@@ -49,14 +49,14 @@ const JuzDetailPage: React.FC = () => {
                 {loading ? (
                     <div className="flex flex-col justify-center items-center py-24 gap-4">
                         <Loader2 className="animate-spin text-primary-600" size={40} />
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Memuat Ayat...</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase  animate-pulse">Memuat Ayat...</p>
                     </div>
                 ) : (
                     verses.map((verse, idx) => (
                         <div key={`${verse.surah}-${verse.ayah}-${idx}`} className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-xl hover:shadow-primary-500/5 transition-all group">
                             <div className="flex justify-between items-center mb-6 border-b border-slate-50 dark:border-slate-800 pb-4">
                                 <div className="flex items-center gap-3">
-                                    <span className="bg-primary-50 text-secondary-600 text-[9px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-inner border border-primary-100/50">
+                                    <span className="bg-primary-50 dark:bg-primary-900/30 text-secondary-600 dark:text-secondary-400 text-[9px] font-black uppercase  px-4 py-1.5 rounded-full shadow-inner border border-primary-100/50 dark:border-primary-900/30">
                                         Surah {verse.surah} : {verse.ayah}
                                     </span>
                                 </div>
@@ -66,7 +66,7 @@ const JuzDetailPage: React.FC = () => {
                                 <p className="font-serif text-3xl leading-[2.5] text-slate-800 dark:text-slate-100" dir="rtl">{verse.arab}</p>
                             </div>
                             <div className="space-y-3">
-                                <p className="text-secondary-600 text-sm font-bold tracking-tight italic group-hover:text-primary-600 transition-colors">{verse.latin}</p>
+                                <p className="text-secondary-600 dark:text-secondary-400 text-sm font-bold tracking-tight italic group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{verse.latin}</p>
                                 <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed text-justify">{verse.text}</p>
                             </div>
                         </div>

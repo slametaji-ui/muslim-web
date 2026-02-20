@@ -89,41 +89,41 @@ const SurahDetailPage: React.FC = () => {
         return (
             <div className="flex flex-col justify-center items-center min-h-screen pb-20">
                 <Loader2 className="animate-spin text-primary-600" size={40} />
-                <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest mt-4">Memuat Ayat...</p>
+                <p className="text-slate-400 font-black text-[10px] uppercase  mt-4">Memuat Ayat...</p>
             </div>
         );
     }
 
     if (!surah) {
         return (
-            <div className="flex flex-col justify-center items-center min-h-screen pb-20 text-center px-4">
-                <h2 className="text-xl font-black text-slate-800 tracking-tight">Gagal memuat data</h2>
-                <Link to="/quran" className="mt-4 text-primary-600 font-bold hover:underline uppercase text-[10px] tracking-widest">Kembali ke Daftar Surah</Link>
+            <div className="flex flex-col justify-center items-center min-h-screen pb-20 dark:bg-slate-950 transition-colors text-center px-4">
+                <h2 className="text-xl font-black text-slate-800 dark:text-white tracking-tight">Gagal memuat data</h2>
+                <Link to="/quran" className="mt-4 text-primary-600 dark:text-primary-400 font-bold hover:underline uppercase text-[10px] ">Kembali ke Daftar Surah</Link>
             </div>
         );
     }
 
     return (
-        <div className="max-w-2xl mx-auto w-full pb-24">
+        <div className="max-w-2xl mx-auto w-full pb-24 dark:bg-slate-950 transition-colors">
             {/* Header */}
-            <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-100 py-4 px-4 flex items-center justify-between mb-6 shadow-sm">
-                <Link to="/quran" className="p-2 -ml-2 hover:bg-slate-100 rounded-full text-slate-600 transition-colors">
+            <div className="sticky top-0 z-30 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 py-4 px-4 flex items-center justify-between mb-6 shadow-sm">
+                <Link to="/quran" className="p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-600 dark:text-slate-400 transition-colors">
                     <ChevronLeft size={24} />
                 </Link>
                 <div className="text-center">
-                    <h1 className="font-bold text-slate-800 text-lg">{surah.name_id}</h1>
-                    <p className="text-xs text-slate-500">{surah.translation_id} • {surah.number_of_verses} Ayat</p>
+                    <h1 className="font-bold text-slate-800 dark:text-white text-lg">{surah.name_id}</h1>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{surah.translation_id} • {surah.number_of_verses} Ayat</p>
                 </div>
                 <div className="flex gap-1">
                     <button 
                         onClick={shareSurah}
-                        className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors"
+                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-400 dark:text-slate-500 transition-colors"
                     >
                         <Share2 size={24} />
                     </button>
                     <button 
                         onClick={() => setShowInfoModal(true)}
-                        className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors"
+                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-400 dark:text-slate-500 transition-colors"
                     >
                         <Info size={24} />
                     </button>
@@ -146,27 +146,27 @@ const SurahDetailPage: React.FC = () => {
                                 <BookOpen size={40} />
                             </div>
                             <h2 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight uppercase">{surah.name_id}</h2>
-                            <p className="text-primary-600 dark:text-primary-400 font-bold text-xs uppercase tracking-widest">{surah.translation_id}</p>
+                            <p className="text-primary-600 dark:text-primary-400 font-bold text-xs uppercase ">{surah.translation_id}</p>
                         </div>
 
                         <div className="space-y-4 mb-8">
                             <div className="flex justify-between items-center p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tempat Turun</span>
+                                <span className="text-[10px] font-black text-slate-400 uppercase ">Tempat Turun</span>
                                 <span className="text-sm font-bold text-slate-800 dark:text-white uppercase">{surah.revelation_id}</span>
                             </div>
                             <div className="flex justify-between items-center p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Jumlah Ayat</span>
+                                <span className="text-[10px] font-black text-slate-400 uppercase ">Jumlah Ayat</span>
                                 <span className="text-sm font-bold text-slate-800 dark:text-white uppercase">{surah.number_of_verses} Ayat</span>
                             </div>
                             <div className="flex justify-between items-center p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nomor Surah</span>
+                                <span className="text-[10px] font-black text-slate-400 uppercase ">Nomor Surah</span>
                                 <span className="text-sm font-bold text-slate-800 dark:text-white uppercase">Ke-{surah.number}</span>
                             </div>
                         </div>
 
                         <button 
                             onClick={() => setShowInfoModal(false)}
-                            className="w-full bg-primary-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-primary-500/20 active:scale-95 transition-all uppercase tracking-widest text-[10px]"
+                            className="w-full bg-primary-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-primary-500/20 active:scale-95 transition-all uppercase  text-[10px]"
                         >
                             Tutup
                         </button>
@@ -193,14 +193,14 @@ const SurahDetailPage: React.FC = () => {
                     <div className="mt-8 flex justify-center gap-3">
                         <button
                             onClick={() => toggleAudio(surah.audio_url)}
-                            className="bg-white text-primary-700 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-primary-50 active:scale-95 transition-all shadow-xl"
+                            className="bg-white text-primary-700 px-6 py-3 rounded-2xl font-black text-[10px] uppercase  flex items-center gap-2 hover:bg-primary-50 active:scale-95 transition-all shadow-xl"
                         >
                             {isPlaying && currentVerseAudio === null ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
                             Putar Murottal
                         </button>
                         <button
                             onClick={() => setShowTafsir(!showTafsir)}
-                            className="bg-white/10 backdrop-blur-md text-white border border-white/20 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-white/20 active:scale-95 transition-all"
+                            className="bg-white/10 backdrop-blur-md text-white border border-white/20 px-6 py-3 rounded-2xl font-black text-[10px] uppercase  flex items-center gap-2 hover:bg-white/20 active:scale-95 transition-all"
                         >
                             <Info size={16} />
                             {showTafsir ? 'Tutup Tafsir' : 'Baca Tafsir'}
@@ -224,20 +224,20 @@ const SurahDetailPage: React.FC = () => {
             {/* Verses List */}
             <div className="space-y-6 px-4">
                 {surah.verses?.map((verse) => (
-                    <div key={verse.id} className="border-b border-slate-100 pb-6 last:border-0" id={`ayah-${verse.ayah}`}>
+                    <div key={verse.id} className="border-b border-slate-100 dark:border-slate-800 pb-6 last:border-0" id={`ayah-${verse.ayah}`}>
                         {/* Actions Row */}
                         <div className="flex justify-between items-center mb-6 bg-slate-50 dark:bg-slate-900 rounded-2xl p-3 border border-slate-100 dark:border-slate-800 shadow-sm">
-                            <div className="w-10 h-10 bg-primary-50 text-secondary-600 rounded-xl flex items-center justify-center font-black text-xs shadow-inner">
+                            <div className="w-10 h-10 bg-primary-50 dark:bg-primary-900/30 text-secondary-600 dark:text-secondary-400 rounded-xl flex items-center justify-center font-black text-xs shadow-inner">
                                 {verse.ayah}
                             </div>
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => toggleAudio(verse.audio, Number(verse.ayah))}
-                                    className={`p-2.5 rounded-xl transition-all ${isPlaying && currentVerseAudio === Number(verse.ayah) ? 'text-white bg-secondary-500 shadow-lg shadow-secondary-200' : 'text-slate-400 hover:text-primary-600 hover:bg-primary-50'}`}
+                                    className={`p-2.5 rounded-xl transition-all ${isPlaying && currentVerseAudio === Number(verse.ayah) ? 'text-white bg-secondary-500 shadow-lg shadow-secondary-200' : 'text-slate-400 dark:text-slate-500 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/50'}`}
                                 >
                                     {isPlaying && currentVerseAudio === Number(verse.ayah) ? <Pause size={18} /> : <Play size={18} />}
                                 </button>
-                                <button className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-white transition-colors">
+                                <button className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 rounded-full hover:bg-white dark:hover:bg-slate-800 transition-colors">
                                     <Share2 size={18} />
                                 </button>
                             </div>
@@ -245,17 +245,17 @@ const SurahDetailPage: React.FC = () => {
 
                         {/* Arabic Text */}
                         <div className="text-right mb-6">
-                            <p className="font-serif text-3xl leading-[2.5] text-slate-800" dir="rtl">
+                            <p className="font-serif text-3xl leading-[2.5] text-slate-800 dark:text-slate-100" dir="rtl">
                                 {verse.arab}
                             </p>
                         </div>
 
                         {/* Transliteration & Meanings */}
                         <div className="space-y-2">
-                            <p className="text-secondary-600 font-bold text-sm leading-relaxed tracking-tight group-hover:text-primary-600 transition-colors">
+                            <p className="text-secondary-600 dark:text-secondary-400 font-bold text-sm leading-relaxed tracking-tight group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                                 {verse.latin}
                             </p>
-                            <p className="text-slate-600 text-sm leading-relaxed">
+                            <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
                                 {verse.text}
                             </p>
                         </div>

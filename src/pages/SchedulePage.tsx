@@ -119,12 +119,12 @@ const SchedulePage: React.FC = () => {
                         <h1 className="text-xl font-black text-slate-800 dark:text-white leading-tight">Jadwal Sholat</h1>
                         <div className="flex items-center gap-1 text-emerald-500 dark:text-emerald-400">
                              <MapPin size={10} />
-                             <span className="text-[10px] font-bold uppercase tracking-widest">{city?.lokasi}</span>
+                             <span className="text-[10px] font-bold uppercase ">{city?.lokasi}</span>
                         </div>
                     </div>
                 </div>
                 <div className="text-right">
-                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Madzhab</p>
+                    <p className="text-[8px] font-black text-slate-400 uppercase ">Madzhab</p>
                     <p className="text-[10px] font-bold text-amber-500 uppercase">{madhab === 'shafi' ? "Syafi'i" : "Hanafi"}</p>
                 </div>
             </div>
@@ -134,13 +134,13 @@ const SchedulePage: React.FC = () => {
                 <div className="flex bg-white dark:bg-slate-900 p-1 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm mb-6">
                     <button 
                         onClick={() => setActiveTab('week')}
-                        className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'week' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-emerald-600'}`}
+                        className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase  transition-all ${activeTab === 'week' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-emerald-600'}`}
                     >
                         Minggu Ini
                     </button>
                     <button 
                         onClick={() => setActiveTab('month')}
-                        className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'month' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-emerald-600'}`}
+                        className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase  transition-all ${activeTab === 'month' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-emerald-600'}`}
                     >
                         Bulan Ini
                     </button>
@@ -151,7 +151,7 @@ const SchedulePage: React.FC = () => {
                         <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="p-2 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl text-slate-400 hover:text-emerald-600 transition-colors">
                             <ChevronLeft size={20} />
                         </button>
-                        <span className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest">
+                        <span className="text-sm font-black text-slate-800 dark:text-white uppercase ">
                             {format(currentMonth, 'MMMM yyyy', { locale: id })}
                         </span>
                         <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="p-2 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl text-slate-400 hover:text-emerald-600 transition-colors">
@@ -163,7 +163,7 @@ const SchedulePage: React.FC = () => {
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-20 gap-4">
                         <Loader2 className="animate-spin text-emerald-500" size={40} />
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Memuat Jadwal...</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase  animate-pulse">Memuat Jadwal...</p>
                     </div>
                 ) : (
                     <div className="space-y-4">
@@ -180,7 +180,7 @@ const SchedulePage: React.FC = () => {
                                             <span className={`text-xs font-black ${isToday ? 'text-amber-600 dark:text-amber-400' : 'text-slate-800 dark:text-white'}`}>{format(dayDate, 'EEEE', { locale: id })}</span>
                                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{format(dayDate, 'dd MMMM yyyy', { locale: id })}</span>
                                         </div>
-                                        {isToday && <span className="px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 text-[8px] font-black uppercase rounded-full tracking-widest">Hari Ini</span>}
+                                        {isToday && <span className="px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 text-[8px] font-black uppercase rounded-full ">Hari Ini</span>}
                                     </div>
                                     <div className="grid grid-cols-3 gap-y-4 gap-x-2">
                                         <ScheduleItem name="Imsyak" time={day.imsak} highlight={isToday} />
@@ -203,7 +203,7 @@ const SchedulePage: React.FC = () => {
 
 const ScheduleItem = ({ name, time, highlight = false }: { name: string; time: string; highlight?: boolean }) => (
     <div className="flex flex-col items-center">
-        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{name}</span>
+        <span className="text-[8px] font-black text-slate-400 uppercase  mb-1">{name}</span>
         <span className={`text-sm font-black tabular-nums ${highlight ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-800 dark:text-white'}`}>{time}</span>
     </div>
 );
