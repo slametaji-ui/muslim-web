@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api, SurahDetail } from '../services/api';
-import { ChevronLeft, Play, Pause, Loader2, Share2, Info, BookOpen } from 'lucide-react';
+import { storageService } from '../services/storageService';
+import { ChevronLeft, Play, Pause, Loader2, Share2, Info, BookOpen, CheckCircle2, Bookmark } from 'lucide-react';
 
 const SurahDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -14,9 +15,19 @@ const SurahDetailPage: React.FC = () => {
     const [showTafsir, setShowTafsir] = useState(false);
     const [showInfoModal, setShowInfoModal] = useState(false);
 
+    const [isKhatam, setIsKhatam] = useState(false);
+    const [lastReadVerse, setLastReadVerse] = useState<number | null>(null);
+
     useEffect(() => {
         if (id) {
-            loadSurah(parseInt(id));
+            const surahId = parseInt(id);
+            loadSurah(surahId);
+            setIsKhatam(storageService.getKhatamList().includes(surahId));
+
+            const lastRead = storageService.getLastRead();
+            if (lastRead && lastRead.surahId === surahId) {
+                setLastReadVerse(lastRead.verseNumber);
+            }
         }
         return () => {
             if (playingAudio) {
@@ -37,9 +48,21 @@ const SurahDetailPage: React.FC = () => {
         }
     };
 
+    const handleToggleKhatam = () => {
+        if (!surah) return;
+        const newList = storageService.toggleKhatam(surah.number);
+        setIsKhatam(newList.includes(surah.number));
+    };
+
+    const handleSaveLastRead = (verseNumber: number) => {
+        if (!surah) return;
+        storageService.saveLastRead(surah.number, surah.name_id, verseNumber);
+        setLastReadVerse(verseNumber);
+    };
+
     const shareSurah = async () => {
         if (!surah) return;
-        
+
         const shareData = {
             title: `Qolbi - Surah ${surah.name_id}`,
             text: `Baca Surah ${surah.name_id} (${surah.translation_id}) di Qolbi. Terdiri dari ${surah.number_of_verses} Ayat.`,
@@ -60,6 +83,10 @@ const SurahDetailPage: React.FC = () => {
     };
 
     const toggleAudio = (url: string, verseNumber?: number) => {
+        if (verseNumber) {
+            handleSaveLastRead(verseNumber);
+        }
+
         if (playingAudio && (verseNumber === currentVerseAudio || (!verseNumber && currentVerseAudio === null))) {
             if (isPlaying) {
                 playingAudio.pause();
@@ -106,26 +133,33 @@ const SurahDetailPage: React.FC = () => {
     return (
         <div className="max-w-2xl mx-auto w-full pb-24 dark:bg-slate-950 transition-colors">
             {/* Header */}
-            <div className="sticky top-0 z-30 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 py-4 px-4 flex items-center justify-between mb-6 shadow-sm">
+            <div className="sticky top-0 z-30 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 py-2 px-4 flex items-center justify-between mb-6 shadow-sm">
                 <Link to="/quran" className="p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-600 dark:text-slate-400 transition-colors">
                     <ChevronLeft size={24} />
                 </Link>
                 <div className="text-center">
-                    <h1 className="font-bold text-slate-800 dark:text-white text-lg">{surah.name_id}</h1>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">{surah.translation_id} • {surah.number_of_verses} Ayat</p>
+                    <h1 className="font-bold text-slate-800 dark:text-white text-md tracking-tight uppercase">{surah.name_id}</h1>
+                    <p className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500">{surah.translation_id} • {surah.number_of_verses} Ayat</p>
                 </div>
                 <div className="flex gap-1">
-                    <button 
+                    <button
+                        onClick={handleToggleKhatam}
+                        className={`p-2 rounded-full transition-all ${isKhatam ? 'text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'text-slate-400 hover:bg-slate-100'}`}
+                        title={isKhatam ? "Sudah Khatam" : "Tandai Selesai Membaca"}
+                    >
+                        <CheckCircle2 size={22} fill={isKhatam ? "currentColor" : "none"} />
+                    </button>
+                    <button
                         onClick={shareSurah}
                         className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-400 dark:text-slate-500 transition-colors"
                     >
-                        <Share2 size={24} />
+                        <Share2 size={22} />
                     </button>
-                    <button 
+                    <button
                         onClick={() => setShowInfoModal(true)}
                         className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-400 dark:text-slate-500 transition-colors"
                     >
-                        <Info size={24} />
+                        <Info size={22} />
                     </button>
                 </div>
             </div>
@@ -134,13 +168,13 @@ const SurahDetailPage: React.FC = () => {
             {showInfoModal && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
                     <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-300 relative">
-                        <button 
+                        <button
                             onClick={() => setShowInfoModal(false)}
                             className="absolute top-6 right-6 p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
                         >
                             <ChevronLeft className="rotate-90" size={20} />
                         </button>
-                        
+
                         <div className="text-center mb-8">
                             <div className="w-20 h-20 bg-primary-50 dark:bg-primary-900/30 text-primary-600 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-inner">
                                 <BookOpen size={40} />
@@ -164,7 +198,7 @@ const SurahDetailPage: React.FC = () => {
                             </div>
                         </div>
 
-                        <button 
+                        <button
                             onClick={() => setShowInfoModal(false)}
                             className="w-full bg-primary-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-primary-500/20 active:scale-95 transition-all uppercase  text-[10px]"
                         >
@@ -174,7 +208,7 @@ const SurahDetailPage: React.FC = () => {
                 </div>
             )}
 
-            {/* Surah Banner - Theme Updated to Green & Orange */}
+            {/* Surah Banner */}
             <div className="mx-4 mb-8 bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-600 rounded-[2.5rem] p-8 text-center text-white shadow-2xl relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-4 opacity-5 rotate-12 group-hover:scale-110 transition-transform duration-700">
                     <BookOpen size={160} />
@@ -224,11 +258,23 @@ const SurahDetailPage: React.FC = () => {
             {/* Verses List */}
             <div className="space-y-6 px-4">
                 {surah.verses?.map((verse) => (
-                    <div key={verse.id} className="border-b border-slate-100 dark:border-slate-800 pb-6 last:border-0" id={`ayah-${verse.ayah}`}>
+                    <div
+                        key={verse.id}
+                        className={`border-b border-slate-100 dark:border-slate-800 pb-6 last:border-0 transition-all duration-500 ${lastReadVerse === Number(verse.ayah) ? 'bg-primary-50/30 dark:bg-primary-900/10 -mx-4 px-4 rounded-xl' : ''}`}
+                        id={`ayah-${verse.ayah}`}
+                    >
                         {/* Actions Row */}
                         <div className="flex justify-between items-center mb-6 bg-slate-50 dark:bg-slate-900 rounded-2xl p-3 border border-slate-100 dark:border-slate-800 shadow-sm">
-                            <div className="w-10 h-10 bg-primary-50 dark:bg-primary-900/30 text-secondary-600 dark:text-secondary-400 rounded-xl flex items-center justify-center font-black text-xs shadow-inner">
-                                {verse.ayah}
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-primary-50 dark:bg-primary-900/30 text-secondary-600 dark:text-secondary-400 rounded-xl flex items-center justify-center font-black text-xs shadow-inner">
+                                    {verse.ayah}
+                                </div>
+                                {lastReadVerse === Number(verse.ayah) && (
+                                    <div className="flex items-center gap-1.5 px-3 py-1 bg-primary-600 text-white rounded-full">
+                                        <Bookmark size={10} fill="currentColor" />
+                                        <span className="text-[8px] font-black uppercase tracking-tighter">Terakhir Dibaca</span>
+                                    </div>
+                                )}
                             </div>
                             <div className="flex gap-2">
                                 <button

@@ -27,7 +27,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<City[]>([]);
     const [locating, setLocating] = useState(false);
-    const [ramadanStart, setRamadanStart] = useState('2026-03-01');
+    const [ramadanStart, setRamadanStart] = useState('2026-02-19');
     const [loading, setLoading] = useState(false);
 
     const handleNext = () => {

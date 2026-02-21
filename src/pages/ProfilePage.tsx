@@ -29,8 +29,12 @@ import {
     Download
 } from 'lucide-react';
 import { api, City } from '../services/api';
+import { storageService } from '../services/storageService';
 import { notificationService } from '../services/notificationService';
 import { useToast } from '../components/CustomToast';
+import { Upload, Music, AlarmClock, Settings } from 'lucide-react';
+import { messaging } from '../services/firebase';
+import { getToken } from 'firebase/messaging';
 
 const ProfilePage: React.FC = () => {
     const navigate = useNavigate();
@@ -38,6 +42,8 @@ const ProfilePage: React.FC = () => {
     const [userName, setUserName] = useState(() => localStorage.getItem('muslim_app_user_name') || '');
     const [theme, setTheme] = useState(() => (localStorage.getItem('theme') || 'light') as 'light' | 'dark');
     const [isAdzanEnabled, setIsAdzanEnabled] = useState(() => localStorage.getItem('muslim_app_adzan_enabled') === 'true');
+    const [adzanConfig, setAdzanConfig] = useState(() => storageService.getAdzanConfig());
+    const [customAlarms, setCustomAlarms] = useState(() => storageService.getCustomAlarms());
     const [hijriOffset, setHijriOffset] = useState(() => Number(localStorage.getItem('muslim_app_hijri_offset')) || 0);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<City[]>([]);
@@ -54,11 +60,18 @@ const ProfilePage: React.FC = () => {
         const isDark = theme === 'dark';
         document.documentElement.classList.toggle('dark', isDark);
     }, [theme]);
+    useEffect(() => {
+        if (isAdzanEnabled) {
+            fetchFcmToken();
+        }
+    }, []);
 
     const handleSave = () => {
         localStorage.setItem('muslim_app_user_name', userName);
         localStorage.setItem('theme', theme);
         localStorage.setItem('muslim_app_adzan_enabled', isAdzanEnabled.toString());
+        storageService.saveAdzanConfig(adzanConfig);
+        storageService.saveCustomAlarms(customAlarms);
         localStorage.setItem('muslim_app_hijri_offset', hijriOffset.toString());
         if (city) api.saveLastCity(city);
 
@@ -138,6 +151,28 @@ const ProfilePage: React.FC = () => {
         if (outcome === 'accepted') setDeferredPrompt(null);
     };
 
+    const fetchFcmToken = async (silent = true) => {
+        try {
+            const token = await getToken(messaging!, {
+                vapidKey: 'BJ4-oUshODBU7NTGJc9DHTzSputAHI-mUmTLBrrI96DiLJO8eS3e8uC3FBJa8LNgeUhANGTcahUNvQ1skjJfe1c'
+            });
+            if (token) {
+                console.log('FCM Token:', token);
+                // Silent mode for background retrieval to avoid Document Focus errors
+                if (!silent) {
+                    await navigator.clipboard.writeText(token);
+                    showToast('FCM Token berhasil disalin!', 'success');
+                }
+            }
+        } catch (e) {
+            console.error('FCM Token error', e);
+            // Only show error toast if not silent
+            if (!silent) {
+                showToast('FCM Error: ' + (e as Error).message, 'error');
+            }
+        }
+    };
+
     const handleShare = async () => {
         const shareData = {
             title: 'Qolbi - Pendamping Muslim Modern',
@@ -159,6 +194,24 @@ const ProfilePage: React.FC = () => {
             } catch (err) {
                 showToast('Gagal menyalin link', 'error');
             }
+        }
+    };
+
+    const handleExport = () => {
+        storageService.exportData();
+        showToast('Data berhasil diekspor!', 'success');
+    };
+
+    const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const success = await storageService.importData(file);
+        if (success) {
+            showToast('Data berhasil dipulihkan! Halaman akan dimuat ulang...', 'success');
+            setTimeout(() => window.location.reload(), 2000);
+        } else {
+            showToast('Gagal memulihkan data. Pastikan format file benar.', 'error');
         }
     };
 
@@ -199,45 +252,127 @@ const ProfilePage: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Adzan Notification Toggle */}
-                    <div className="space-y-3">
-                        <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase  block px-1">Notifikasi Adzan</label>
-                        <button
-                            onClick={async () => {
-                                const nextState = !isAdzanEnabled;
-                                if (nextState) {
-                                    const granted = await notificationService.requestPermission();
-                                    if (!granted) {
-                                        showToast('Izin notifikasi diperlukan untuk mengaktifkan adzan', 'error');
-                                        return;
+                    {/* Adzan Notification Settings */}
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between px-1">
+                            <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase block">Notifikasi Adzan</label>
+                            <button
+                                onClick={async () => {
+                                    const nextState = !isAdzanEnabled;
+                                    if (nextState) {
+                                        const granted = await notificationService.requestPermission();
+                                        if (!granted) {
+                                            showToast('Izin notifikasi diperlukan', 'error');
+                                            return;
+                                        }
+                                        await fetchFcmToken();
                                     }
-                                    showToast('Notifikasi adzan diaktifkan!', 'success');
-                                } else {
-                                    showToast('Notifikasi adzan dimatikan');
-                                }
-                                setIsAdzanEnabled(nextState);
-                                localStorage.setItem('muslim_app_adzan_enabled', nextState.toString());
-                            }}
-                            className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all ${isAdzanEnabled ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800' : 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700'}`}
-                        >
-                            {ToastComponent}
-                            <div className="flex items-center gap-3">
-                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isAdzanEnabled ? 'bg-emerald-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-400'}`}>
-                                    {isAdzanEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
-                                </div>
-                                <div className="text-left">
-                                    <p className={`text-sm font-black ${isAdzanEnabled ? 'text-emerald-900 dark:text-emerald-400' : 'text-slate-500'}`}>
-                                        Suara Adzan
-                                    </p>
-                                    <p className={`text-[10px] font-bold ${isAdzanEnabled ? 'text-emerald-600/70' : 'text-slate-400'}`}>
-                                        {isAdzanEnabled ? 'Aktif' : 'Nonaktif'}
-                                    </p>
-                                </div>
+                                    setIsAdzanEnabled(nextState);
+                                }}
+                                className={`text-[10px] font-black uppercase px-3 py-1 rounded-full transition-all ${isAdzanEnabled ? 'bg-emerald-500 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-400'}`}
+                            >
+                                {isAdzanEnabled ? 'Aktif' : 'Nonaktif'}
+                            </button>
+                        </div>
+
+                        {isAdzanEnabled && (
+                            <div className="grid grid-cols-1 gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                                {Object.entries(adzanConfig).map(([prayer, enabled]) => (
+                                    <button
+                                        key={prayer}
+                                        onClick={() => setAdzanConfig({ ...adzanConfig, [prayer]: !enabled })}
+                                        className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${enabled ? 'bg-emerald-50/50 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-800/50' : 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 opacity-60'}`}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${enabled ? 'bg-emerald-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-400'}`}>
+                                                <Music size={16} />
+                                            </div>
+                                            <span className={`text-xs font-black uppercase ${enabled ? 'text-emerald-900 dark:text-emerald-400' : 'text-slate-500'}`}>
+                                                {prayer}
+                                            </span>
+                                        </div>
+                                        <div className={`w-10 h-5 rounded-full relative transition-colors ${enabled ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`}>
+                                            <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-all ${enabled ? 'right-0.5' : 'left-0.5'}`}></div>
+                                        </div>
+                                    </button>
+                                ))}
                             </div>
-                            <div className={`w-12 h-6 rounded-full relative transition-colors ${isAdzanEnabled ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`}>
-                                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${isAdzanEnabled ? 'right-1' : 'left-1'}`}></div>
+                        )}
+                    </div>
+
+                    {/* Custom Alarms / Imsyak Section */}
+                    <div className="space-y-4">
+                        <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase block px-1">Alarm & Imsyak</label>
+                        <div className="space-y-3">
+                            {/* Imsyak Alarm */}
+                            <div className="p-5 rounded-[2rem] bg-amber-50/50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/50 flex flex-col gap-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-lg shadow-amber-500/20">
+                                            <AlarmClock size={20} />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-black text-amber-900 dark:text-amber-400">Pengingat Imsyak</p>
+                                            <p className="text-[9px] font-bold text-amber-600/70 uppercase">Alarm sebelum waktu Imsyak</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setCustomAlarms({ ...customAlarms, imsyak: { ...customAlarms.imsyak, enabled: !customAlarms.imsyak.enabled } })}
+                                        className={`w-12 h-6 rounded-full relative transition-colors ${customAlarms.imsyak.enabled ? 'bg-amber-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+                                    >
+                                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all ${customAlarms.imsyak.enabled ? 'right-1' : 'left-1'}`}></div>
+                                    </button>
+                                </div>
+
+                                {customAlarms.imsyak.enabled && (
+                                    <div className="flex items-center gap-4 bg-white dark:bg-slate-800 p-2 rounded-2xl animate-in zoom-in-95 duration-200">
+                                        <button
+                                            onClick={() => setCustomAlarms({ ...customAlarms, imsyak: { ...customAlarms.imsyak, offset: customAlarms.imsyak.offset - 1 } })}
+                                            className="w-10 h-10 flex items-center justify-center bg-amber-50 dark:bg-amber-900/30 rounded-xl text-amber-600 font-black"
+                                        >-</button>
+                                        <div className="flex-1 text-center font-black text-amber-900 dark:text-white text-[10px] uppercase">
+                                            {Math.abs(customAlarms.imsyak.offset)} Menit Sebelum
+                                        </div>
+                                        <button
+                                            onClick={() => setCustomAlarms({ ...customAlarms, imsyak: { ...customAlarms.imsyak, offset: customAlarms.imsyak.offset + 1 } })}
+                                            className="w-10 h-10 flex items-center justify-center bg-amber-50 dark:bg-amber-900/30 rounded-xl text-emerald-600 font-black"
+                                        >+</button>
+                                    </div>
+                                )}
                             </div>
-                        </button>
+
+                            {/* Tahajjud Alarm */}
+                            <div className="p-5 rounded-[2rem] bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800/50 flex flex-col gap-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-xl bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                                            <Clock size={20} />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-black text-indigo-900 dark:text-indigo-400">Alarm Tahajjud</p>
+                                            <p className="text-[9px] font-bold text-indigo-600/70 uppercase">Bangun lebih awal untuk sholat</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setCustomAlarms({ ...customAlarms, tahajjud: { ...customAlarms.tahajjud, enabled: !customAlarms.tahajjud.enabled } })}
+                                        className={`w-12 h-6 rounded-full relative transition-colors ${customAlarms.tahajjud.enabled ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+                                    >
+                                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all ${customAlarms.tahajjud.enabled ? 'right-1' : 'left-1'}`}></div>
+                                    </button>
+                                </div>
+
+                                {customAlarms.tahajjud.enabled && (
+                                    <div className="animate-in zoom-in-95 duration-200">
+                                        <input
+                                            type="time"
+                                            value={customAlarms.tahajjud.time}
+                                            onChange={(e) => setCustomAlarms({ ...customAlarms, tahajjud: { ...customAlarms.tahajjud, time: e.target.value } })}
+                                            className="w-full p-4 rounded-2xl bg-white dark:bg-slate-800 border-none outline-none text-center font-black text-lg text-indigo-600 shadow-inner"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
 
                     {/* Theme Toggle */}
@@ -349,6 +484,42 @@ const ProfilePage: React.FC = () => {
                     </button>
                 </div>
 
+
+                {/* Backup & Restore Section */}
+                <div className="mt-8 space-y-4">
+                    <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-6">Cadangan & Pemulihan</h2>
+                    <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 shadow-xl border border-slate-100 dark:border-slate-800 space-y-4">
+                        <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-800 p-4 rounded-3xl border border-slate-100 dark:border-slate-700">
+                            <div className="w-10 h-10 rounded-xl bg-primary-500 text-white flex items-center justify-center">
+                                <Download size={20} />
+                            </div>
+                            <div className="flex-1">
+                                <p className="text-sm font-black text-slate-800 dark:text-white">Ekspor Data</p>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase">Simpan semua progres & pengaturan</p>
+                            </div>
+                            <button
+                                onClick={handleExport}
+                                className="px-4 py-2 bg-primary-600 text-white text-[10px] font-black uppercase rounded-xl active:scale-95 transition-all shadow-lg shadow-primary-500/20"
+                            >
+                                Ekspor
+                            </button>
+                        </div>
+
+                        <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-800 p-4 rounded-3xl border border-slate-100 dark:border-slate-700">
+                            <div className="w-10 h-10 rounded-xl bg-secondary-500 text-white flex items-center justify-center">
+                                <Upload size={20} />
+                            </div>
+                            <div className="flex-1">
+                                <p className="text-sm font-black text-slate-800 dark:text-white">Impor Data</p>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase">Pulihkan dari file cadangan</p>
+                            </div>
+                            <label className="px-4 py-2 bg-secondary-600 text-white text-[10px] font-black uppercase rounded-xl active:scale-95 transition-all shadow-lg shadow-secondary-500/20 cursor-pointer text-center">
+                                Impor
+                                <input type="file" accept=".json" onChange={handleImport} className="hidden" />
+                            </label>
+                        </div>
+                    </div>
+                </div>
 
                 {/* New Section: App Info & Support */}
                 <div className="mt-8 space-y-4">

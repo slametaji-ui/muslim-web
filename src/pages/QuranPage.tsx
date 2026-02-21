@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api, Surah, Juz, Theme } from '../services/api';
-import { Search, Play, Pause, Loader2, Layers, Grid, Library, ChevronRight } from 'lucide-react';
+import { storageService } from '../services/storageService';
+import { Search, Play, Pause, Loader2, Layers, Grid, Library, ChevronRight, Bookmark, CheckCircle2 } from 'lucide-react';
 
 const QuranPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'surah' | 'juz'>('surah');
@@ -12,8 +13,14 @@ const QuranPage: React.FC = () => {
     const [playingId, setPlayingId] = useState<number | null>(null);
     const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
 
+    const [lastRead, setLastRead] = useState<any>(null);
+    const [khatamList, setKhatamList] = useState<number[]>([]);
+
     useEffect(() => {
         loadData();
+        setLastRead(storageService.getLastRead());
+        setKhatamList(storageService.getKhatamList());
+
         return () => {
             if (audio) {
                 audio.pause();
@@ -94,13 +101,13 @@ const QuranPage: React.FC = () => {
 
                         <div className="relative">
                             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-primary-600" size={18} />
-                                <input
-                                    type="text"
-                                    placeholder={`Cari ${activeTab === 'surah' ? 'Surah' : 'Juz'}...`}
-                                    value={searchQuery}
-                                    onChange={handleSearch}
-                                    className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-white dark:bg-slate-900 dark:text-white dark:placeholder-slate-500 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-secondary-300 shadow-lg border-none text-sm font-bold"
-                                />
+                            <input
+                                type="text"
+                                placeholder={`Cari ${activeTab === 'surah' ? 'Surah' : 'Juz'}...`}
+                                value={searchQuery}
+                                onChange={handleSearch}
+                                className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-white dark:bg-slate-900 dark:text-white dark:placeholder-slate-500 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-secondary-300 shadow-lg border-none text-sm font-bold"
+                            />
                         </div>
                     </div>
                 </div>
@@ -108,6 +115,26 @@ const QuranPage: React.FC = () => {
 
             {/* List */}
             <div className="space-y-3 px-4">
+                {/* Last Read Card */}
+                {!loading && activeTab === 'surah' && lastRead && !searchQuery && (
+                    <Link
+                        to={`/quran/${lastRead.surahId}`}
+                        className="block bg-gradient-to-r from-primary-600 to-primary-700 p-6 rounded-[2rem] shadow-xl shadow-primary-500/10 mb-6 relative overflow-hidden group border border-white/10"
+                    >
+                        <div className="absolute top-0 right-0 p-4 opacity-10 rotate-12 group-hover:scale-110 transition-transform">
+                            <Bookmark size={80} fill="white" />
+                        </div>
+                        <div className="relative z-10">
+                            <div className="flex items-center gap-2 mb-2">
+                                <Bookmark size={14} className="text-secondary-400" fill="currentColor" />
+                                <span className="text-[10px] font-black text-white/70 uppercase tracking-widest">Lanjutkan Membaca</span>
+                            </div>
+                            <h2 className="text-xl font-black text-white uppercase">{lastRead.surahName}</h2>
+                            <p className="text-primary-100 text-xs font-bold opacity-80 uppercase ">Ayat {lastRead.verseNumber}</p>
+                        </div>
+                    </Link>
+                )}
+
                 {loading ? (
                     <div className="space-y-3 animate-pulse">
                         {[...Array(6)].map((_, i) => (
@@ -126,8 +153,8 @@ const QuranPage: React.FC = () => {
                 ) : activeTab === 'surah' ? (
                     filteredSurahs.length > 0 ? (
                         filteredSurahs.map((surah, index) => (
-                            <div 
-                                key={surah.number} 
+                            <div
+                                key={surah.number}
                                 className="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 flex justify-between items-center hover:bg-primary-50/50 dark:hover:bg-primary-900/10 hover:border-primary-100 dark:hover:border-primary-800 hover:shadow-xl hover:shadow-primary-500/5 transition-all group relative animate-in fade-in slide-in-from-bottom-4 duration-300"
                                 style={{ animationDelay: `${index * 50}ms` }}
                             >
@@ -138,7 +165,12 @@ const QuranPage: React.FC = () => {
                                         {surah.number}
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-slate-800 dark:text-white group-hover:text-primary-700 dark:group-hover:text-primary-400 transition-colors uppercase tracking-tight text-sm">{surah.name_id}</h3>
+                                        <div className="flex items-center gap-2">
+                                            <h3 className="font-bold text-slate-800 dark:text-white group-hover:text-primary-700 dark:group-hover:text-primary-400 transition-colors uppercase tracking-tight text-sm">{surah.name_id}</h3>
+                                            {khatamList.includes(surah.number) && (
+                                                <CheckCircle2 size={14} className="text-emerald-500" fill="currentColor" />
+                                            )}
+                                        </div>
                                         <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
                                             {surah.translation_id} • {surah.number_of_verses} Ayat
                                         </p>
@@ -172,9 +204,9 @@ const QuranPage: React.FC = () => {
                 ) : (
                     <div className="grid grid-cols-2 gap-4">
                         {juzs.map((juz, index) => (
-                            <Link 
-                                key={juz.number} 
-                                to={`/quran/juz/${juz.number}`} 
+                            <Link
+                                key={juz.number}
+                                to={`/quran/juz/${juz.number}`}
                                 className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-xl hover:shadow-primary-500/10 hover:border-primary-200 dark:hover:border-primary-800 hover:-translate-y-1 transition-all text-center group animate-in zoom-in-95 duration-300"
                                 style={{ animationDelay: `${index * 30}ms` }}
                             >

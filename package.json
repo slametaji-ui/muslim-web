@@ -26,6 +26,7 @@
     "adhan": "^4.4.3",
     "axios": "^1.13.2",
     "date-fns": "^4.1.0",
+    "firebase": "^12.9.0",
     "lucide-react": "^0.556.0",
     "react-router-dom": "^7.10.1"
   }

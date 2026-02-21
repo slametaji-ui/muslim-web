@@ -7,6 +7,16 @@ services:
       - web-network
     expose:
       - "5173"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
 
 networks:
   web-network:

@@ -8,11 +8,12 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['logo-muslimapp.png', 'favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
+      includeAssets: ['logo-muslimapp.png', 'favicon.ico', 'robots.txt', 'apple-touch-icon.png', 'firebase-messaging-sw.js'],
       manifest: {
         name: 'Qolbi',
         short_name: 'Qolbi',
         description: 'Qolbi: Pendamping Muslim Modern',
+        gcm_sender_id: '103953800507',
         theme_color: '#059669',
         background_color: '#ffffff',
         display: 'standalone',
@@ -34,7 +35,7 @@ export default defineConfig({
             purpose: 'any maskable'
           }
         ]
-      }
+      } as any
     })
   ],
   resolve: {
